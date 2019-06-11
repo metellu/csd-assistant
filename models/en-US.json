@@ -1,0 +1,421 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "csd assistant",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "TimeTableIntent",
+          "slots": [
+            {
+              "name": "course_name",
+              "type": "Course"
+            },
+            {
+              "name": "course_code",
+              "type": "AMAZON.FirstName"
+            }
+          ],
+          "samples": [
+            "check the time for cs {course_code}",
+            "check the schedule for {course_name}",
+            "check the time for {course_name}",
+            "look up the time for cs {course_code}"
+          ]
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "CourseDescIntent",
+          "slots": [
+            {
+              "name": "course_name",
+              "type": "Course",
+              "samples": [
+                "I'd like to know {course_name}",
+                "{course_name}"
+              ]
+            }
+          ],
+          "samples": [
+            "give me a brief introduction to course {course_name}",
+            "what is the course {course_name} about",
+            "tell me something about {course_name}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "Course",
+          "values": [
+            {
+              "name": {
+                "value": "software engineering for big data applications and analytics"
+              }
+            },
+            {
+              "name": {
+                "value": "advanced machine learning"
+              }
+            },
+            {
+              "name": {
+                "value": "software engineering topics in cyber-physical systems"
+              }
+            },
+            {
+              "name": {
+                "value": "computational linguistics"
+              }
+            },
+            {
+              "name": {
+                "value": "unstructured data"
+              }
+            },
+            {
+              "name": {
+                "value": "into to computer vision techniques"
+              }
+            },
+            {
+              "name": {
+                "value": "data structures and algorithms"
+              }
+            },
+            {
+              "name": {
+                "value": "information visualization"
+              }
+            },
+            {
+              "name": {
+                "value": "parallel computing"
+              }
+            },
+            {
+              "name": {
+                "value": "image compression"
+              }
+            },
+            {
+              "name": {
+                "value": "human computer interaction"
+              }
+            },
+            {
+              "name": {
+                "value": "software design and architecture"
+              }
+            },
+            {
+              "name": {
+                "value": "artificial intelligence two"
+              }
+            },
+            {
+              "name": {
+                "value": "game design"
+              }
+            },
+            {
+              "name": {
+                "value": "internet algorithmics"
+              }
+            },
+            {
+              "name": {
+                "value": "computer networks two"
+              }
+            },
+            {
+              "name": {
+                "value": "programming for scientists"
+              }
+            },
+            {
+              "name": {
+                "value": "image processing"
+              }
+            },
+            {
+              "name": {
+                "value": "nonfunctional software requirements safety accessibility and sustainability",
+                "synonyms": [
+                  "nonfunctional software requirements"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "specification testing and quality assurance"
+              }
+            },
+            {
+              "name": {
+                "value": "game engine development"
+              }
+            },
+            {
+              "name": {
+                "value": "intro to data science",
+                "synonyms": [
+                  "data science"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CourseCode",
+          "values": [
+            {
+              "name": {
+                "value": "9864B"
+              }
+            },
+            {
+              "name": {
+                "value": "9860B"
+              }
+            },
+            {
+              "name": {
+                "value": "9831B"
+              }
+            },
+            {
+              "name": {
+                "value": "9660B"
+              }
+            },
+            {
+              "name": {
+                "value": "9639B"
+              }
+            },
+            {
+              "name": {
+                "value": "9635B",
+                "synonyms": [
+                  "4402B"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9628B",
+                "synonyms": [
+                  "4481B"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9552B",
+                "synonyms": [
+                  "4474B"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9549B",
+                "synonyms": [
+                  "4471B"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9542",
+                "synonyms": [
+                  "4442B"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9541",
+                "synonyms": [
+                  "4483B"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9855"
+              }
+            },
+            {
+              "name": {
+                "value": "9832"
+              }
+            },
+            {
+              "name": {
+                "value": "9668",
+                "synonyms": [
+                  "4438A"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9657",
+                "synonyms": [
+                  "4457A"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9642",
+                "synonyms": [
+                  "2120A"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "9637"
+              }
+            },
+            {
+              "name": {
+                "value": "9630A"
+              }
+            },
+            {
+              "name": {
+                "value": "9622A"
+              }
+            },
+            {
+              "name": {
+                "value": "4472A",
+                "synonyms": [
+                  "9550A"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "4482A",
+                "synonyms": [
+                  "9511A"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "TimeTableIntent",
+          "delegationStrategy": "ALWAYS",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "course_name",
+              "type": "Course",
+              "confirmationRequired": false,
+              "elicitationRequired": false,
+              "prompts": {},
+              "validations": [
+                {
+                  "type": "hasEntityResolutionMatch",
+                  "prompt": "Slot.Validation.594127257073.100329803731.148889828018"
+                }
+              ]
+            },
+            {
+              "name": "course_code",
+              "type": "AMAZON.FirstName",
+              "confirmationRequired": false,
+              "elicitationRequired": false,
+              "prompts": {}
+            }
+          ]
+        },
+        {
+          "name": "CourseDescIntent",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "course_name",
+              "type": "Course",
+              "confirmationRequired": false,
+              "elicitationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Slot.658709789848.1251308875839"
+              },
+              "validations": [
+                {
+                  "type": "hasEntityResolutionMatch",
+                  "prompt": "Slot.Validation.658709789848.1251308875839.1047611235594"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Slot.511968633788.1463423126778",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "The course name is required for processing your request. Please tell me which course schedule you are looking for ?"
+          }
+        ]
+      },
+      {
+        "id": "Slot.Validation.594127257073.100329803731.148889828018",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Sorry, course {course_name} is not available this year. Would you like to try another course?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.658709789848.1251308875839",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Which course do you want to know?"
+          }
+        ]
+      },
+      {
+        "id": "Slot.Validation.658709789848.1251308875839.1047611235594",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Sorry, I'm afraid you asked for a course that doesn't exist. Would you like to try another course?"
+          }
+        ]
+      }
+    ]
+  }
+}
