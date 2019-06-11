@@ -21,7 +21,6 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
     }
     public Optional<Response> handle(HandlerInput input, IntentRequest intentRequest){
         String speechText = "Sorry, I failed to fetch the time.";
-
         IntentRequest request = (IntentRequest)input.getRequestEnvelope().getRequest();
         Map<String, Slot> slots = request.getIntent().getSlots();
         String courseName = "";
@@ -101,7 +100,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             }
         }
         catch(Exception ex){
-            speechText = "error occured....."+ error + ex.getLocalizedMessage();
+            speechText = "error occured. "+ ex.getLocalizedMessage();
         }
 
         //if(!courseCode.equals("")){
