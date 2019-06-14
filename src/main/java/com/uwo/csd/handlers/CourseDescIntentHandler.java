@@ -39,7 +39,7 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
             exprAttr.put(":name", new AttributeValue().withS(name));
 
             ScanRequest scanReq = new ScanRequest()
-                    .withTableName("t_csd_timetable")
+                    .withTableName("t_csd_course")
                     .withFilterExpression("course_name = :name")
                     .withProjectionExpression("description")
                     .withExpressionAttributeValues(exprAttr);
