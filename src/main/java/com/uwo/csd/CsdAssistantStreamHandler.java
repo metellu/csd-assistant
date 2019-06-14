@@ -13,6 +13,7 @@ public class CsdAssistantStreamHandler extends SkillStreamHandler {
                         new CancelandStopIntentHandler(),
                         new TimeTableIntentHandler(),
                         new CourseDescIntentHandler(),
+                        new InstructorIntentHandler(),
                         new HelpIntentHandler(),
                         new LaunchRequestHandler(),
                         new SessionEndedRequestHandler(),
