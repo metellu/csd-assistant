@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2a1cfaad-5a6a-4f29-9843-5f5da4ef898b" name="Default Changelist" comment="" />
+    <list default="true" id="2a1cfaad-5a6a-4f29-9843-5f5da4ef898b" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/InstructorIntentHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uwo/csd/CsdAssistantStreamHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uwo/csd/CsdAssistantStreamHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/CourseDescIntentHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/CourseDescIntentHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/LaunchRequestHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/LaunchRequestHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/TimeTableIntentHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/TimeTableIntentHandler.java" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -13,43 +22,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pom.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="40" selection-start-line="14" selection-start-column="40" selection-end-line="14" selection-end-column="40" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/CsdAssistantStreamHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="7" column="38" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="38" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/FallbackIntentHandler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="28" column="5" selection-start-line="28" selection-start-column="5" selection-end-line="28" selection-end-column="5" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/LaunchRequestHandler.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="165">
-              <caret line="20" column="61" selection-start-line="20" selection-start-column="61" selection-end-line="20" selection-end-column="61" />
+              <caret line="20" column="109" selection-start-line="20" selection-start-column="109" selection-end-line="20" selection-end-column="109" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -96,11 +72,44 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/TimeTableIntentHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="20" column="43" selection-start-line="20" selection-start-column="43" selection-end-line="20" selection-end-column="43" />
+            <state relative-caret-position="740">
+              <caret line="90" column="46" selection-start-line="90" selection-start-column="46" selection-end-line="90" selection-end-column="46" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/InstructorIntentHandler.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="495">
+              <caret line="52" column="83" selection-start-line="52" selection-start-column="83" selection-end-line="52" selection-end-column="83" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/CourseDescIntentHandler.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="33" column="46" selection-start-line="33" selection-start-column="35" selection-end-line="33" selection-end-column="46" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/en-US.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2595">
+              <caret line="173" column="45" selection-start-line="173" selection-start-column="45" selection-end-line="173" selection-end-column="45" />
             </state>
           </provider>
         </entry>
@@ -123,27 +132,34 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/entity/Course.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/CancelandStopIntentHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/HelpIntentHandler.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/LaunchRequestHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/SessionEndedRequestHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/FallbackIntentHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/FallbackIntentHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/CSDAssistentStreamHandler.java" />
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/models/en-US.json" />
+        <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/CourseDescIntentHandler.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/TutorIntentHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/CsdAssistantStreamHandler.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/LaunchRequestHandler.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/InstructorIntentHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/TimeTableIntentHandler.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="368" />
-    <option name="y" value="69" />
-    <option name="width" value="1400" />
+    <option name="x" value="216" />
+    <option name="y" value="63" />
+    <option name="width" value="1660" />
     <option name="height" value="952" />
   </component>
   <component name="ProjectView">
@@ -151,6 +167,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
@@ -158,6 +175,11 @@
             <path>
               <item name="csd-assistant" type="b2602c69:ProjectViewProjectNode" />
               <item name="csd-assistant" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="csd-assistant" type="b2602c69:ProjectViewProjectNode" />
+              <item name="csd-assistant" type="462c0819:PsiDirectoryNode" />
+              <item name="models" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="csd-assistant" type="b2602c69:ProjectViewProjectNode" />
@@ -211,13 +233,12 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1559015160188" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1560314223930" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="project.structure.last.edited" value="Modules" />
@@ -252,18 +273,29 @@
       <option name="presentableId" value="Default" />
       <updated>1558993351325</updated>
       <workItem from="1558993355268" duration="5133000" />
-      <workItem from="1559761284219" duration="1807000" />
+      <workItem from="1559761284219" duration="5750000" />
+      <workItem from="1559857831923" duration="507000" />
+      <workItem from="1559876749403" duration="1521000" />
+      <workItem from="1559880314660" duration="1931000" />
+      <workItem from="1559945285183" duration="14381000" />
+      <workItem from="1560035343494" duration="2126000" />
+      <workItem from="1560126525713" duration="1645000" />
+      <workItem from="1560212261182" duration="6974000" />
+      <workItem from="1560307190731" duration="2572000" />
+      <workItem from="1560391494022" duration="4126000" />
+      <workItem from="1560471671967" duration="9574000" />
+      <workItem from="1560544544568" duration="86000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6940000" />
+    <option name="totallyTimeSpent" value="56326000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="368" y="69" width="1400" height="952" extended-state="0" />
+    <frame x="216" y="63" width="1660" height="952" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2533137" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24227442" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -298,13 +330,10 @@
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/CSDAssistentStreamHandler.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/CsdAssistantStreamHandler.java">
+    <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="7" column="38" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="38" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="450">
+          <caret line="30" column="21" selection-start-line="30" selection-start-column="21" selection-end-line="30" selection-end-column="21" />
         </state>
       </provider>
     </entry>
@@ -318,10 +347,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/CsdAssistantStreamHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="15" column="51" selection-start-line="15" selection-start-column="28" selection-end-line="15" selection-end-column="51" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk-12.0.1.jdk/Contents/Home/lib/src.zip!/java.base/java/lang/String.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-758">
+          <caret line="2683" column="18" selection-start-line="2683" selection-start-column="18" selection-end-line="2683" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/LaunchRequestHandler.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
-          <caret line="20" column="61" selection-start-line="20" selection-start-column="61" selection-end-line="20" selection-end-column="61" />
+          <caret line="20" column="109" selection-start-line="20" selection-start-column="109" selection-end-line="20" selection-end-column="109" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -358,6 +404,33 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/InstructorIntentHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="495">
+          <caret line="52" column="83" selection-start-line="52" selection-start-column="83" selection-end-line="52" selection-end-column="83" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/CourseDescIntentHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="33" column="46" selection-start-line="33" selection-start-column="35" selection-end-line="33" selection-end-column="46" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/en-US.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2595">
+          <caret line="173" column="45" selection-start-line="173" selection-start-column="45" selection-end-line="173" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/entity/Course.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
@@ -365,17 +438,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="40" selection-start-line="14" selection-start-column="40" selection-end-line="14" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/uwo/csd/handlers/TimeTableIntentHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="20" column="43" selection-start-line="20" selection-start-column="43" selection-end-line="20" selection-end-column="43" />
+        <state relative-caret-position="740">
+          <caret line="90" column="46" selection-start-line="90" selection-start-column="46" selection-end-line="90" selection-end-column="46" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
