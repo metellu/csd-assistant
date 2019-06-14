@@ -18,7 +18,7 @@ public class LaunchRequestHandler implements RequestHandler {
 
     @Override
     public Optional<Response> handle(HandlerInput input) {
-        String speechText = "Welcome to the UWO CSD Assistant, you can say hello";
+        String speechText = "Welcome to the UWO CSD Assistant. Please tell me the course ID or name to query.";
         return input.getResponseBuilder()
                 .withSpeech(speechText)
                 .withSimpleCard("CSD Assistant", speechText)
