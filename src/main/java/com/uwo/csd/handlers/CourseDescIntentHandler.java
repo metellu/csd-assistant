@@ -14,10 +14,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.amazon.ask.request.Predicates.intentName;
 
@@ -30,9 +27,22 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
         String speechText = "";
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
-            Map<String, Slot> slots = request.getIntent().getSlots();
+            Intent intent = request.getIntent();
+            Map<String, Slot> slots = intent.getSlots();
             Slot slot = slots.get("course_name");
             String name = slot.getValue();
+            if(name == null || name.isEmpty()){
+                Map<String,Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
+                if(sessionAttr.containsKey("course_name")){
+                    name = (String)sessionAttr.get("course_name");
+                }
+                else{
+                    return input.getResponseBuilder().addElicitSlotDirective("course_name",intentRequest.getIntent()).withSpeech("Which course you want to query?").build();
+                }
+            }
+            else{
+                input.getAttributesManager().setSessionAttributes(Collections.singletonMap("course_name",name));
+            }
 
             AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
@@ -47,7 +57,7 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
             ScanResult result = client.scan(scanReq);
             List<Map<String, AttributeValue>> items = result.getItems();
             if (items.size() == 0) {
-                speechText = "Error occurs.";
+                return input.getResponseBuilder().addElicitSlotDirective("course_name",intent).withSpeech("Sorry, course "+name+" is not available this term. Would you like to try another course?").build();
             } else {
                 speechText = items.get(0).get("description").getS();
             }
