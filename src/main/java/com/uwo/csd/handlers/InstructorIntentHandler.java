@@ -64,6 +64,6 @@ public class InstructorIntentHandler implements IntentRequestHandler{
         catch(Exception ex){
             speechText += ex.getMessage();
         }
-        return input.getResponseBuilder().withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).build();
+        return input.getResponseBuilder().withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).withShouldEndSession(false).build();
     }
 }
