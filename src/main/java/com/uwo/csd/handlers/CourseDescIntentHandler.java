@@ -14,6 +14,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
+import javax.management.Attribute;
 import java.util.*;
 
 import static com.amazon.ask.request.Predicates.intentName;
@@ -30,42 +31,67 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
             Intent intent = request.getIntent();
             Map<String, Slot> slots = intent.getSlots();
             Slot slot = slots.get("course_name");
+            Slot codeSlot = slots.get("course_code");
             String name = slot.getValue();
-            if(name == null || name.isEmpty()){
-                Map<String,Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
-                if(sessionAttr.containsKey("course_name")){
-                    name = (String)sessionAttr.get("course_name");
+            String code = codeSlot.getValue();
+            String tutor = "";
+            if( code == null || code.isEmpty() ) {
+                if (name == null || name.isEmpty()) {
+                    Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
+                    if (sessionAttr.containsKey("course_name")) {
+                        name = (String) sessionAttr.get("course_name");
+                    } else {
+                        //if course name is presented neither in slot nor in session, the skill needs to prompt user to provide one.
+                        return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Which course you want to query?").build();
+                    }
                 }
-                else{
-                    return input.getResponseBuilder().addElicitSlotDirective("course_name",intentRequest.getIntent()).withSpeech("Which course you want to query?").build();
-                }
-            }
-            else{
-                input.getAttributesManager().setSessionAttributes(Collections.singletonMap("course_name",name));
             }
 
             AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
-            exprAttr.put(":name", new AttributeValue().withS(name));
 
-            ScanRequest scanReq = new ScanRequest()
-                    .withTableName("t_csd_course")
-                    .withFilterExpression("course_name = :name")
-                    .withProjectionExpression("description")
-                    .withExpressionAttributeValues(exprAttr);
-
-            ScanResult result = client.scan(scanReq);
-            List<Map<String, AttributeValue>> items = result.getItems();
-            if (items.size() == 0) {
-                return input.getResponseBuilder().addElicitSlotDirective("course_name",intent).withSpeech("Sorry, course "+name+" is not available this term. Would you like to try another course?").build();
-            } else {
-                speechText = items.get(0).get("description").getS();
+            if( code!=null && !code.isEmpty() ) {
+                exprAttr.put(":code", new AttributeValue().withS(code));
+                ScanRequest scanReq = new ScanRequest().withTableName("t_csd_course")
+                        .withFilterExpression("contains(course_code,:code)")
+                        .withProjectionExpression("course_name,description,instructor")
+                        .withExpressionAttributeValues(exprAttr);
+                ScanResult result = client.scan(scanReq);
+                List<Map<String, AttributeValue>> items = result.getItems();
+                if( items.size()==0 ){
+                    return input.getResponseBuilder().addElicitSlotDirective("course_name",intent).withSpeech("Sorry, course CS"+code+" is not available this term. In order to avoid ambiguity, please provide me with the course name.").build();
+                }
+                else{
+                    name = items.get(0).get("course_name").getS();
+                    tutor = items.get(0).get("instructor").getS();
+                    speechText = items.get(0).get("description").getS();
+                }
             }
+            else if( name!=null && !name.isEmpty()) {
+                exprAttr.put(":name", new AttributeValue().withS(name));
+                ScanRequest scanReq = new ScanRequest()
+                        .withTableName("t_csd_course")
+                        .withFilterExpression("course_name = :name")
+                        .withProjectionExpression("description, instructor")
+                        .withExpressionAttributeValues(exprAttr);
+
+                ScanResult result = client.scan(scanReq);
+                List<Map<String, AttributeValue>> items = result.getItems();
+                if (items.size() == 0) {
+                    //if none item is retrieved, it says that the course name provided by the user is invalid. So we need to prompt the user to give another one.
+                    return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course " + name + " is not available this term. Would you like to try another course?").build();
+                } else {
+                    speechText = items.get(0).get("description").getS();
+                }
+            }
+
+            input.getAttributesManager().setSessionAttributes(Collections.singletonMap("instructor", tutor));
+            input.getAttributesManager().setSessionAttributes(Collections.singletonMap("course_name", name));
         }
         catch(Exception ex){
             speechText += ex.getStackTrace();
         }
 
-        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant", speechText).build();
+        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant", speechText).withShouldEndSession(false).build();
     }
 }
