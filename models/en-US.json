@@ -20,7 +20,11 @@
           "slots": [
             {
               "name": "course_name",
-              "type": "Course"
+              "type": "Course",
+              "samples": [
+                "I would like to know {course_name}",
+                "{course_name}"
+              ]
             },
             {
               "name": "course_code",
@@ -28,6 +32,11 @@
             }
           ],
           "samples": [
+            "look up the time of that course",
+            "tell me the time of that course",
+            "tell me the time for cs {course_code}",
+            "tell me the time for {course_name}",
+            "look up the time for {course_name}",
             "check the time for cs {course_code}",
             "check the schedule for {course_name}",
             "check the time for {course_name}",
@@ -48,12 +57,38 @@
                 "I'd like to know {course_name}",
                 "{course_name}"
               ]
+            },
+            {
+              "name": "course_code",
+              "type": "AMAZON.FirstName"
             }
           ],
           "samples": [
-            "give me a brief introduction to course {course_name}",
+            "tell me something about {course_code}",
+            "give me a description of {course_code}",
+            "what is the course {course_code} about",
+            "give me a description of that course",
+            "what is the course all about",
+            "tell me something about that course",
+            "give me a brief description of the course {course_name}",
             "what is the course {course_name} about",
             "tell me something about {course_name}"
+          ]
+        },
+        {
+          "name": "InstructorIntent",
+          "slots": [
+            {
+              "name": "instructor_fullname",
+              "type": "AMAZON.Person",
+              "samples": [
+                "{instructor_fullname}"
+              ]
+            }
+          ],
+          "samples": [
+            "what is the research interests of {instructor_fullname}",
+            "tell me about {instructor_fullname}"
           ]
         }
       ],
@@ -328,7 +363,7 @@
       "intents": [
         {
           "name": "TimeTableIntent",
-          "delegationStrategy": "ALWAYS",
+          "delegationStrategy": "SKILL_RESPONSE",
           "confirmationRequired": false,
           "prompts": {},
           "slots": [
@@ -336,14 +371,10 @@
               "name": "course_name",
               "type": "Course",
               "confirmationRequired": false,
-              "elicitationRequired": false,
-              "prompts": {},
-              "validations": [
-                {
-                  "type": "hasEntityResolutionMatch",
-                  "prompt": "Slot.Validation.594127257073.100329803731.148889828018"
-                }
-              ]
+              "elicitationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Slot.1503259513559.734178502164"
+              }
             },
             {
               "name": "course_code",
@@ -356,6 +387,7 @@
         },
         {
           "name": "CourseDescIntent",
+          "delegationStrategy": "SKILL_RESPONSE",
           "confirmationRequired": false,
           "prompts": {},
           "slots": [
@@ -373,6 +405,29 @@
                   "prompt": "Slot.Validation.658709789848.1251308875839.1047611235594"
                 }
               ]
+            },
+            {
+              "name": "course_code",
+              "type": "AMAZON.FirstName",
+              "confirmationRequired": false,
+              "elicitationRequired": false,
+              "prompts": {}
+            }
+          ]
+        },
+        {
+          "name": "InstructorIntent",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "instructor_fullname",
+              "type": "AMAZON.Person",
+              "confirmationRequired": false,
+              "elicitationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Slot.466844783101.120935480864"
+              }
             }
           ]
         }
@@ -386,15 +441,6 @@
           {
             "type": "PlainText",
             "value": "The course name is required for processing your request. Please tell me which course schedule you are looking for ?"
-          }
-        ]
-      },
-      {
-        "id": "Slot.Validation.594127257073.100329803731.148889828018",
-        "variations": [
-          {
-            "type": "PlainText",
-            "value": "Sorry, course {course_name} is not available this year. Would you like to try another course?"
           }
         ]
       },
@@ -413,6 +459,37 @@
           {
             "type": "PlainText",
             "value": "Sorry, I'm afraid you asked for a course that doesn't exist. Would you like to try another course?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.466844783101.120935480864",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Which instructors do you want to know?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.809163555318.262525090732",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Which course you would like to know?"
+          },
+          {
+            "type": "PlainText",
+            "value": "Which course do you want to check?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Slot.1503259513559.734178502164",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Which course do you want to know about?"
           }
         ]
       }
