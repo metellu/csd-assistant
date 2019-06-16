@@ -117,6 +117,8 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
         }
 
         input.getAttributesManager().setSessionAttributes(Collections.singletonMap("course_name", courseName));
+
+        //in order to enable dialog, the returned response should be config to keep the session alive.
         return input.getResponseBuilder().
                 withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).withShouldEndSession(false).build();
 
