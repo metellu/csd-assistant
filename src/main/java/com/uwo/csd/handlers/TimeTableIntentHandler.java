@@ -40,13 +40,6 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                 Slot codeSlot = slots.get("course_code");
                 if(codeSlot != null) {
                     courseCode = codeSlot.getValue();
-                    speechText = "slot is not null.";
-
-                    if(courseCode == null) {
-                        speechText += "course code is null.";
-                    } else if (courseCode.equals("")) {
-                        speechText += "course code is empty.";
-                    }
                 }
             }
         } else {
@@ -54,11 +47,17 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
         }
 
         if( (courseCode==null && courseName==null) || (courseCode!=null && courseCode.isEmpty()) && (courseName!= null && courseName.isEmpty()) ){
+            //When user inputs some courses that don't show in the value list of the 'Course' slot type, the skill will send null to the backend.
+            //So here, I used two if conditions. One for no valid course name and course code; The other for all two input values are empty.(may not be useful.)
+
+            //As course_name is defined as an required slot, its value must be set for the skill. For that reason, if this intent is invoked after other intents,
+            //the course name value can be accessed via looking up in session.
             Map<String,Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
             if( sessionAttr.containsKey("course_name") ){
                 courseName = (String)sessionAttr.get("course_name");
             }
             else{
+                //if the course name is neither provided by a user nor found in session, this intent will return Dialog.ElicitSlot Directive to prompt user to provide one.
                 return input.getResponseBuilder().addElicitSlotDirective("course_name",intentRequest.getIntent()).withSpeech("Sorry, I'm afraid either you are looking for a non-exist course or you didn't provide a valid course name. If you would like to continue, please tell me another course name. ").build();
             }
         }
@@ -70,7 +69,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
         AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
         Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
 
-        if( courseCode != null && !courseCode.isEmpty() ) {
+        if( courseCode != null && !courseCode.isEmpty() ) { //if course code is provided by user
             exprAttr.put(":code", new AttributeValue().withS(courseCode));
             ScanRequest scanReq = new ScanRequest()
                     .withTableName("t_csd_course")
@@ -85,6 +84,9 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
 
             speechText = speechText = "Course CS" + courseCode + " " + courseName + " starts " + timeConcat;
             if( !request.getDialogState().toString().equals("COMPLETED") ){
+                // as mentioned before, course name is defined as an required slot. However, the design of the skill is to take in either a course code or a course name.
+                //In the case of user providing a course code, I take advantage of the course name that retrieved from DB to form the 'course_name' slot. Then return
+                //'Dialog.Delegate' Directive to skill to finish the whole intent.
                 Slot nameSlot = Slot.builder().withName("course_name").withValue(courseName).build();
                 Slot codeSlot = Slot.builder().withName("course_code").withValue(courseCode).build();
                 Intent returnedIntent = request.getIntent().builder().putSlotsItem("course_name",nameSlot).putSlotsItem("course_code",codeSlot).withName("TimeTableIntent").build();
@@ -106,6 +108,8 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                 timeConcat = courseInfo.get("time");
             }
             if( timeConcat.equals("") ) {
+                //Since the slot validation is disabled in the skill side,it is implemented manually here. When no item can be retrieved from DB, I assume that the input
+                // course name is not valid. In that case, the code will prompt user to try another course.
                 return input.getResponseBuilder().addElicitSlotDirective("course_name",intentRequest.getIntent()).withSpeech("Sorry, course "+ courseName+ "may be not available this year. Please tell me another course, if you would like to continue.").build();
             } else{
                 speechText = "Course CS" + codeConcat + " " + courseName + " starts " + timeConcat;
