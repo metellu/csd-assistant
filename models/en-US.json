@@ -87,8 +87,10 @@
             }
           ],
           "samples": [
-            "what is the research interests of {instructor_fullname}",
-            "tell me about {instructor_fullname}"
+            "tell me something about the background of that instructor",
+            "what are the research interests of that instructor",
+            "what are the research interests of {instructor_fullname}",
+            "tell me something about the background of {instructor_fullname}"
           ]
         }
       ],
@@ -417,6 +419,7 @@
         },
         {
           "name": "InstructorIntent",
+          "delegationStrategy": "SKILL_RESPONSE",
           "confirmationRequired": false,
           "prompts": {},
           "slots": [
