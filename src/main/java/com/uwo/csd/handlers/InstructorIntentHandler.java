@@ -32,32 +32,41 @@ public class InstructorIntentHandler implements IntentRequestHandler{
             Slot slot = slots.get("instructor_fullname");
             if (slot != null) {
                 String instructor = slot.getValue();
-                if (instructor != null && !instructor.isEmpty()) {
-                    Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
-                    exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
-                    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
-                    ScanRequest scanReq = new ScanRequest()
+                if (instructor == null || instructor.isEmpty()) {
+                    Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
+                    if (attr.containsKey("instructor")) {
+                        instructor = (String)attr.get("instructor");
+                    }
+                    else{
+                        return input.getResponseBuilder().addElicitSlotDirective("instructor",intentRequest.getIntent()).withSpeech("Which instructor you would like to know?").build();
+                    }
+                }
+
+                Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
+                exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
+                AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+                ScanRequest scanReq = new ScanRequest()
                             .withTableName("t_csd_instructors")
                             .withFilterExpression("fullname = :name")
                             .withProjectionExpression("research_interests")
                             .withExpressionAttributeValues(exprAttr);
 
-                    ScanResult result = client.scan(scanReq);
-                    if (result != null) {
-                        List<Map<String, AttributeValue>> items = result.getItems();
-                        if (items.size() == 0) {
-                            speechText = "Error occurs: retrieved 0 items."+instructor;
+                ScanResult result = client.scan(scanReq);
+                if (result != null) {
+                    List<Map<String, AttributeValue>> items = result.getItems();
+                    if (items.size() == 0) {
+                        speechText = "Error occurs: retrieved 0 items."+instructor;
+                    } else {
+                        Map<String, AttributeValue> item = items.get(0);
+                        if (item.containsKey("research_interests")) {
+                            speechText = item.get("research_interests").getS();
                         } else {
-                            Map<String, AttributeValue> item = items.get(0);
-                            if (item.containsKey("research_interests")) {
-                                speechText = item.get("research_interests").getS();
-                            } else {
-                                speechText = "Error occurs: returned item does not contain info";
-                            }
+                            speechText = "Error occurs: returned item does not contain info";
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 speechText = "Error occurs: empty slot";
             }
         }
