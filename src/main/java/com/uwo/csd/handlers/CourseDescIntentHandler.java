@@ -26,19 +26,23 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
 
     public Optional<Response> handle(HandlerInput input, IntentRequest intentRequest){
         String speechText = "";
+        String name = "";
+        String code = "";
+        String tutor = "";
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
             Intent intent = request.getIntent();
             Map<String, Slot> slots = intent.getSlots();
             Slot slot = slots.get("course_name");
             Slot codeSlot = slots.get("course_code");
-            String name = slot.getValue();
-            String code = codeSlot.getValue();
-            String tutor = "";
+            name = slot.getValue();
+            code = codeSlot.getValue();
+
+            Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
+
             if( code == null || code.isEmpty() ) {
                 if (name == null || name.isEmpty()) {
-                    Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
-                    if (sessionAttr.containsKey("course_name")) {
+                    if ( sessionAttr!=null && sessionAttr.containsKey("course_name")) {
                         name = (String) sessionAttr.get("course_name");
                     } else {
                         //if course name is presented neither in slot nor in session, the skill needs to prompt user to provide one.
@@ -59,11 +63,15 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                 ScanResult result = client.scan(scanReq);
                 List<Map<String, AttributeValue>> items = result.getItems();
                 if( items.size()==0 ){
-                    return input.getResponseBuilder().addElicitSlotDirective("course_name",intent).withSpeech("Sorry, course CS"+code+" is not available this term. In order to avoid ambiguity, please provide me with the course name.").build();
+                    return input.getResponseBuilder().addElicitSlotDirective("course_name",intent).withSpeech("Sorry, course CS"+code+" may not be available this term. In order to avoid ambiguity, please provide me with the course name.").build();
                 }
                 else{
                     name = items.get(0).get("course_name").getS();
-                    tutor = items.get(0).get("instructor").getS();
+                    List<AttributeValue> tutors = items.get(0).get("instructor").getL();
+                    for(AttributeValue tutorVal:tutors){
+                        tutor += tutorVal.getS()+" ";
+                    }
+                    tutor = tutor.substring(0, tutor.lastIndexOf(" "));
                     speechText = items.get(0).get("description").getS();
                 }
             }
@@ -82,16 +90,22 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course " + name + " is not available this term. Would you like to try another course?").build();
                 } else {
                     speechText = items.get(0).get("description").getS();
+                    List<AttributeValue> tutors = items.get(0).get("instructor").getL();
+                    for(AttributeValue tutorVal:tutors){
+                        tutor += tutorVal.getS()+" ";
+                    }
+                    tutor = tutor.substring(0, tutor.lastIndexOf(" "));
                 }
             }
-
-            input.getAttributesManager().setSessionAttributes(Collections.singletonMap("instructor", tutor));
-            input.getAttributesManager().setSessionAttributes(Collections.singletonMap("course_name", name));
+            sessionAttr.put("instructor",tutor);
+            sessionAttr.put("course_name",name);
+            input.getAttributesManager().setSessionAttributes(sessionAttr);
         }
         catch(Exception ex){
-            speechText += ex.getStackTrace();
+            speechText += " error:"+ex.getStackTrace();
         }
 
-        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant", speechText).withShouldEndSession(false).build();
+
+        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant V1", speechText).withShouldEndSession(false).build();
     }
 }
