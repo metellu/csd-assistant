@@ -57,32 +57,35 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
         }
         else {
             AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+            List<Map<String, AttributeValue>> items = new ArrayList<>();
             try {
                 if ( IntentHelper.isStringValid(courseName) ) {
                     Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
                     exprAttr.put(":courseName", new AttributeValue().withS(courseName));
-                    ScanRequest scanRequest = new ScanRequest()
-                            .withTableName("t_csd_course")
-                            .withFilterExpression("course_name = :courseName")
-                            .withProjectionExpression("prerequisites")
-                            .withExpressionAttributeValues(exprAttr);
-                    ScanResult result = client.scan(scanRequest);
-                    List<Map<String, AttributeValue>> items = result.getItems();
+                    items = IntentHelper.DBQueryByCourseName(exprAttr,"prerequisites");
+
                     if (items.size() == 0) {
                         return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, the course you're looking for seems unavailable this year. Would you like to try another course?").build();
-                    } else {
-                        Map<String, AttributeValue> item = items.get(0);
-                        if (item.containsKey("prerequisites")) {
-                            List<AttributeValue> attrVals = item.get("prerequisites").getL();
-                            for (AttributeValue attrVal : attrVals) {
-                                preqConcat += attrVal.getS() + ", ";
-                            }
-                            preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
-                            preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
-                            speechText = "According to the course description of " + courseName + ", students are expected to meet all the prerequisites to enroll in the course, including " + preqConcat + ". Do you think you meet all the pre-conditions?";
-                            return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
-                        }
                     }
+                }
+                else if( IntentHelper.isStringValid(courseCode) ){
+                    Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
+                    exprAttr.put(":courseCode", new AttributeValue().withS(courseCode));
+                    items = IntentHelper.DBQueryByCourseCode(exprAttr,"prerequisites");
+                    if (items.size() == 0) {
+                        return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, the course you're looking for seems unavailable this year. Would you like to try another course?").build();
+                    }
+                }
+                Map<String, AttributeValue> item = items.get(0);
+                if (item.containsKey("prerequisites")) {
+                    List<AttributeValue> attrVals = item.get("prerequisites").getL();
+                    for (AttributeValue attrVal : attrVals) {
+                        preqConcat += attrVal.getS() + ", ";
+                    }
+                    preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
+                    preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
+                    speechText = "According to the course description of " + courseName + ", students are expected to meet all the prerequisites to enroll in the course, including " + preqConcat + ". Do you think you meet all the pre-conditions?";
+                    return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                 }
             }
             catch(Exception ex){
