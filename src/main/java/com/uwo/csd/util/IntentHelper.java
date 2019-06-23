@@ -89,4 +89,16 @@ public class IntentHelper {
         List<Map<String, AttributeValue>> items = result.getItems();
         return items;
     }
+
+    public static List<Map<String, AttributeValue>> DBQueryByCourseCode(Map<String, AttributeValue> exprAttr, String projections){
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+        ScanRequest scanRequest = new ScanRequest()
+                .withTableName("t_csd_course")
+                .withFilterExpression("course_code = :courseCode")
+                .withProjectionExpression(projections)
+                .withExpressionAttributeValues(exprAttr);
+        ScanResult result = client.scan(scanRequest);
+        List<Map<String, AttributeValue>> items = result.getItems();
+        return items;
+    }
 }
