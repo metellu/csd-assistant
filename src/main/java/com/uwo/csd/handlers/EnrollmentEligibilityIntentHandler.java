@@ -13,11 +13,9 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.*;
-
 import java.util.Optional;
-
+import com.uwo.csd.util.IntentHelper;
 import static com.amazon.ask.request.Predicates.intentName;
 
 @Slf4j
@@ -28,21 +26,16 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
     public Optional<Response> handle(HandlerInput input, IntentRequest intentRequest) {
         String speechText = "";
         String courseName = "";
+        String courseCode = "";
         String preqConcat = "";
         String confirm    = "";
 
         Map<String,Slot> slots = intentRequest.getIntent().getSlots();
-        if( slots.containsKey("course_name") ){
-            Slot slot = slots.get("course_name");
-            courseName = slot.getValue();
-        }
+        courseName = IntentHelper.getCourseNameIfExists(slots);
+        courseCode = IntentHelper.getCourseCodeIfExists(slots);
+        confirm    = IntentHelper.getSpecifiedSlotValueIfExists(slots,"prerequisites_confirm");
 
-        if( slots.containsKey("prerequisites_confirm") ){
-            Slot slot = slots.get("prerequisites_confirm");
-            confirm = slot.getValue();
-        }
-
-        if( courseName==null || courseName.isEmpty() ){
+        if( courseCode.isEmpty() && courseName.isEmpty() ){
             Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
             if( attr.containsKey("course_name") ){
                 courseName = (String)attr.get("course_name");
@@ -56,7 +49,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
         log.info("course name:"+courseName);
         if( confirm!=null && !confirm.isEmpty() ){
             if( confirm.equals("no") || confirm.equals("nope") ){
-                speechText = "Sorry, it appears you don't meet the prerequisites. You cannot enroll in this course.";
+                speechText = "Sorry, it appears you don't meet all the prerequisites. You cannot enroll in this course.";
             }
             else if( confirm.equals("yes") || confirm.equals("yeap") ){
                 speechText = "Congrats. You meet all the prerequisites. You may be able to enroll in this course.";
@@ -65,7 +58,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
         else {
             AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
             try {
-                if (courseName != null && !courseName.isEmpty()) {
+                if ( IntentHelper.isStringValid(courseName) ) {
                     Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
                     exprAttr.put(":courseName", new AttributeValue().withS(courseName));
                     ScanRequest scanRequest = new ScanRequest()
@@ -86,7 +79,8 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                             }
                             preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
                             preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
-                            return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech("Have you met all the prerequisite, including " + preqConcat + "?").build();
+                            speechText = "According to the course description of " + courseName + ", students are expected to meet all the prerequisites to enroll in the course, including " + preqConcat + ". Do you think you meet all the pre-conditions?";
+                            return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                         }
                     }
                 }
@@ -96,6 +90,6 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 log.error(ex.getMessage());
             }
         }
-        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).build();
+        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).withShouldEndSession(false).build();
     }
 }
