@@ -13,6 +13,8 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.uwo.csd.util.IntentHelper;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,48 +28,36 @@ public class InstructorIntentHandler implements IntentRequestHandler{
     }
     public Optional<Response> handle(HandlerInput input, IntentRequest intentRequest){
         String speechText = "";
+        String instructor = "";
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
             Map<String, Slot> slots = request.getIntent().getSlots();
-            Slot slot = slots.get("instructor_fullname");
-            if (slot != null) {
-                String instructor = slot.getValue();
-                if (instructor == null || instructor.isEmpty()) {
-                    Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
-                    if (attr.containsKey("instructor")) {
-                        instructor = (String)attr.get("instructor");
-                    }
-                    else{
-                        return input.getResponseBuilder().addElicitSlotDirective("instructor",intentRequest.getIntent()).withSpeech("Which instructor you would like to know?").build();
-                    }
+
+            instructor = IntentHelper.getSpecifiedSlotValueIfExists(slots,"instructor_fullname");
+            if ( instructor.isEmpty() ) {
+                Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
+                if (attr.containsKey("instructor")) {
+                    instructor = (String)attr.get("instructor");
                 }
-
-                Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
-                exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
-                AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
-                ScanRequest scanReq = new ScanRequest()
-                            .withTableName("t_csd_instructors")
-                            .withFilterExpression("fullname = :name")
-                            .withProjectionExpression("research_interests")
-                            .withExpressionAttributeValues(exprAttr);
-
-                ScanResult result = client.scan(scanReq);
-                if (result != null) {
-                    List<Map<String, AttributeValue>> items = result.getItems();
-                    if (items.size() == 0) {
-                        speechText = "Error occurs: retrieved 0 items."+instructor;
-                    } else {
-                        Map<String, AttributeValue> item = items.get(0);
-                        if (item.containsKey("research_interests")) {
-                            speechText = item.get("research_interests").getS();
-                        } else {
-                            speechText = "Error occurs: returned item does not contain info";
-                        }
-                    }
+                else{
+                    return input.getResponseBuilder().addElicitSlotDirective("instructor",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
                 }
             }
-            else {
-                speechText = "Error occurs: empty slot";
+
+            Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
+            exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
+            List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"research_interests");
+
+
+            if (items.size() == 0) {
+                input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
+            } else {
+                Map<String, AttributeValue> item = items.get(0);
+                if (item.containsKey("research_interests")) {
+                    speechText = item.get("research_interests").getS();
+                } else {
+                    speechText = "Error occurs: returned item does not contain info";
+                }
             }
         }
         catch(Exception ex){
