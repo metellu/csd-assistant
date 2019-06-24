@@ -55,6 +55,9 @@ public class IntentHelper {
         if( !isCourseNameEmpty(input) ){
             name = input.get("course_name").getValue();
         }
+        else{
+            name = "";
+        }
         return name;
     }
 
@@ -62,6 +65,9 @@ public class IntentHelper {
         String code = "";
         if( !isCourseCodeEmpty(input) ){
             code = input.get("course_code").getValue();
+        }
+        else{
+            code = "";
         }
         return code;
     }
@@ -73,6 +79,9 @@ public class IntentHelper {
             String tmp = slot.getValue();
             if( isStringValid(tmp) ){
                 value = tmp;
+            }
+            else{
+                value = "";
             }
         }
         return value;
