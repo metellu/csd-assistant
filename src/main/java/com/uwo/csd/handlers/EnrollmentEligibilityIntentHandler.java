@@ -62,7 +62,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 if ( IntentHelper.isStringValid(courseName) ) {
                     Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
                     exprAttr.put(":courseName", new AttributeValue().withS(courseName));
-                    items = IntentHelper.DBQueryByCourseName(exprAttr,"prerequisites");
+                    items = IntentHelper.DBQueryByCourseName(exprAttr,"prerequisites,course_name,course_code");
 
                     if (items.size() == 0) {
                         return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, the course you're looking for seems unavailable this year. Would you like to try another course?").build();
@@ -71,7 +71,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 else if( IntentHelper.isStringValid(courseCode) ){
                     Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
                     exprAttr.put(":courseCode", new AttributeValue().withS(courseCode));
-                    items = IntentHelper.DBQueryByCourseCode(exprAttr,"prerequisites");
+                    items = IntentHelper.DBQueryByCourseCode(exprAttr,"prerequisites,course_name,course_code");
                     if (items.size() == 0) {
                         return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, the course you're looking for seems unavailable this year. Would you like to try another course?").build();
                     }
@@ -82,9 +82,13 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                     for (AttributeValue attrVal : attrVals) {
                         preqConcat += attrVal.getS() + ", ";
                     }
+                    courseName = (courseName!=null && !courseName.isEmpty())?courseName:item.get("course_name").getS();
+                    Map<String,Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
+                    sessionAttr.put("course_name",courseName);
+                    input.getAttributesManager().setSessionAttributes(sessionAttr);
                     preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
                     preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
-                    speechText = "According to the course description of " + courseName + ", students are expected to meet all the prerequisites to enroll in the course, including " + preqConcat + ". Do you think you meet all the pre-conditions?";
+                    speechText = "According to the course description of " +courseName + ", students are expected to meet all the prerequisites to enroll in the course, including " + preqConcat + ". Do you think you meet all the pre-conditions?";
                     return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                 }
             }
