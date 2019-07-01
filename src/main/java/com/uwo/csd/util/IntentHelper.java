@@ -122,4 +122,16 @@ public class IntentHelper {
         List<Map<String, AttributeValue>> items = result.getItems();
         return items;
     }
+
+    public static List<Map<String, AttributeValue>> DBQueryByPartialInstructorName(Map<String, AttributeValue> exprAttr, String projections){
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+        ScanRequest scanRequest = new ScanRequest()
+                .withTableName("t_csd_instructors")
+                .withFilterExpression("contains(fullname,:name)")
+                .withProjectionExpression(projections)
+                .withExpressionAttributeValues(exprAttr);
+        ScanResult result = client.scan(scanRequest);
+        List<Map<String, AttributeValue>> items = result.getItems();
+        return items;
+    }
 }
