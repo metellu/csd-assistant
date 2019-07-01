@@ -29,14 +29,30 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
         String courseCode = "";
         String preqConcat = "";
         String confirm    = "";
+        List<String> prerequisite = new ArrayList<>();
 
         Map<String,Slot> slots = intentRequest.getIntent().getSlots();
         courseName = IntentHelper.getCourseNameIfExists(slots);
         courseCode = IntentHelper.getCourseCodeIfExists(slots);
-        confirm    = IntentHelper.getSpecifiedSlotValueIfExists(slots,"prerequisites_confirm");
+        try {
+            confirm = slots.get("prerequisites_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+        }
+        catch(Exception ex){
+            speechText = ex.getMessage();
+        }
+
+        List<String> confirms = new ArrayList<>();
+
+        Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+        if( attr.containsKey("prerequisites") ){
+            prerequisite = (List<String>) attr.get("prerequisites");
+        }
+        if( attr.containsKey("confirms") ){
+            confirms = (List<String>)attr.get("confirms");
+        }
 
         if( courseCode.isEmpty() && courseName.isEmpty() ){
-            Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+
             if( attr.containsKey("course_name") ){
                 courseName = (String)attr.get("course_name");
             }
@@ -45,14 +61,26 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
             }
         }
 
-        log.info("confirm:"+confirm);
-        log.info("course name:"+courseName);
-        if( confirm!=null && !confirm.isEmpty() ){
-            if( confirm.equals("no") || confirm.equals("nope") ){
-                speechText = "Sorry, it appears you don't meet all the prerequisites. You cannot enroll in this course.";
-            }
-            else if( confirm.equals("yes") || confirm.equals("yeap") ){
-                speechText = "Congrats. You meet all the prerequisites. You may be able to enroll in this course.";
+        if( IntentHelper.isStringValid(confirm) ) {
+            confirms.add(confirm);
+            attr.put("confirms",confirms);
+            if (confirms.stream().anyMatch(str -> IntentHelper.isStringValid(str))) {
+                if (confirms.stream().anyMatch(str -> str.equalsIgnoreCase("no"))) {
+                    speechText = "Sorry, it appears you don't meet all the prerequisites. You cannot enroll in this course.";
+                    confirms.clear();
+                    attr.replace("confirms",confirms);
+                }
+                else {
+
+                    if (prerequisite.size() > 0) {
+                        String cond = prerequisite.remove(0);
+                        attr.replace("prerequisites", prerequisite);
+                        input.getAttributesManager().setSessionAttributes(attr);
+                        return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(cond).build();
+                    } else {
+                        speechText = "Congrats. You meet all the prerequisites. You may be able to enroll in this course.";
+                    }
+                }
             }
         }
         else {
@@ -80,15 +108,19 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 if (item.containsKey("prerequisites")) {
                     List<AttributeValue> attrVals = item.get("prerequisites").getL();
                     for (AttributeValue attrVal : attrVals) {
+                        prerequisite.add(attrVal.getS());
                         preqConcat += attrVal.getS() + ", ";
                     }
                     courseName = (courseName!=null && !courseName.isEmpty())?courseName:item.get("course_name").getS();
                     Map<String,Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
                     sessionAttr.put("course_name",courseName);
                     input.getAttributesManager().setSessionAttributes(sessionAttr);
-                    preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
-                    preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
-                    speechText = "According to the course description of " +courseName + ", students are expected to meet all the prerequisites to enroll in the course, including " + preqConcat + ". Do you think you meet all the pre-conditions?";
+                    //preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
+                    //preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
+                    speechText = "According to the course description of " +courseName + ", students are expected to meet all the prerequisites to enroll in the course. Please provide yes or no answers to the following questions. Then I can help you determine your eligibility. " + prerequisite.get(0);
+                    prerequisite.remove(0);
+                    attr.put("prerequisites",prerequisite);
+                    input.getAttributesManager().setSessionAttributes(attr);
                     return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                 }
             }
