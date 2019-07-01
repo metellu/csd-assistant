@@ -29,6 +29,9 @@ public class InstructorIntentHandler implements IntentRequestHandler{
     public Optional<Response> handle(HandlerInput input, IntentRequest intentRequest){
         String speechText = "";
         String instructor = "";
+        String title      = "";
+        String interests  = "";
+        String gender     = "";
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
             Map<String, Slot> slots = request.getIntent().getSlots();
@@ -43,21 +46,48 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                     return input.getResponseBuilder().addElicitSlotDirective("instructor",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
                 }
             }
-
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
+
+            String[] nameArr = instructor.split("\\s");
+            if ( nameArr.length == 1 ){
+                exprAttr.put(":name",new AttributeValue().withS(nameArr[0].toLowerCase()));
+                List<Map<String,AttributeValue>> items = IntentHelper.DBQueryByPartialInstructorName(exprAttr,"fullname");
+                if( items.size() == 0 ){
+                    return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Sorry, the name you provided does not match any instructor. Please tell me which instructor you would like to know.").build();
+                }
+                else{
+                    instructor = items.get(0).get("fullname").getS();
+                    Slot slot = Slot.builder().withName("instructor_fullname").withValue(instructor).build();
+                    Intent intent = Intent.builder().withName("InstructorIntent").putSlotsItem("instructor_fullname",slot).build();
+                    return input.getResponseBuilder().addConfirmSlotDirective("instructor_fullname",intent).withSpeech("Did you mean professor"+instructor+"?").build();
+                }
+            }
+
             exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
-            List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"research_interests");
+            List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"title, research_interests, gender");
 
 
             if (items.size() == 0) {
-                input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
+                return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
             } else {
                 Map<String, AttributeValue> item = items.get(0);
                 if (item.containsKey("research_interests")) {
-                    speechText = item.get("research_interests").getS();
-                } else {
-                    speechText = "Error occurs: returned item does not contain info";
+                    interests = item.get("research_interests").getS();
                 }
+                if( item.containsKey("title") ){
+                    title = item.get("title").getS();
+                    if( title.startsWith("assistant") ){
+                        title = "an "+title;
+                    }
+                    else{
+                        title = "a "+title;
+                    }
+                }
+                if( item.containsKey("gender") ){
+                    gender = item.get("gender").getS();
+                    gender = gender.equals("male")?"His":"Her";
+                }
+                speechText = instructor +" is "+title+" of the department of computer science at the Western University. "+ gender +" research interests includes "+interests;
             }
         }
         catch(Exception ex){
