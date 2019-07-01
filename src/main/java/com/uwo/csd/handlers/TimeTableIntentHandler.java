@@ -97,7 +97,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             ScanRequest scanReq = new ScanRequest()
                     .withTableName("t_csd_course")
                     .withFilterExpression("course_name = :name")
-                    .withProjectionExpression("course_code, course_time, instructor")
+                    .withProjectionExpression("course_code, time_location, instructor")
                     .withExpressionAttributeValues(exprAttr);
             ScanResult result = client.scan(scanReq);
             Map<String, String> courseInfo = retrieveCourseTime(result);
@@ -144,14 +144,16 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                 codeConcat = codeConcat.substring(0,codeConcat.lastIndexOf("or"));
                 returned.put("code",codeConcat);
             }
-            if( item.containsKey("course_time") ){
-                AttributeValue timeVals = item.get("course_time");
+            if( item.containsKey("time_location") ){
+                AttributeValue timeVals = item.get("time_location");
                 if (timeVals==null){
                     timeConcat = "ERR";
                 }
                 else {
                     for (AttributeValue timeVal : timeVals.getL()) {
-                        timeConcat = timeConcat + timeVal.getS() + " or ";
+                        Map<String,AttributeValue> timeMap = timeVal.getM();
+                        String tmp = "from "+timeMap.get("start").getS()+" to "+timeMap.get("end").getS()+" "+timeMap.get("day_in_week").getS();
+                        timeConcat = timeConcat + tmp + " or ";
                     }
                     timeConcat = timeConcat.substring(0, timeConcat.lastIndexOf("or"));
                     returned.put("time", timeConcat);
