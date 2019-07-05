@@ -6,7 +6,10 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.uwo.csd.entity.Course;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -87,6 +90,42 @@ public class IntentHelper {
         return value;
     }
 
+    public static Course buildCourseObj(Map<String,AttributeValue> items){
+        String name = "";
+        List<String> codes = new ArrayList<>();
+        List<Map<String,String>> timeLocation = new ArrayList<>();
+        List<String> instructors = new ArrayList<>();
+        String desc = "";
+        if( items.containsKey("course_name") ){
+            name = items.get("course_name").getS();
+        }
+        if( items.containsKey("course_code") ){
+            List<AttributeValue> codesVal = items.get("course_code").getL();
+            codesVal.stream().forEach(val->codes.add(val.getS()));
+        }
+        if( items.containsKey("time_location") ){
+            List<AttributeValue> timeLocVals = items.get("time_location").getL();
+            for(AttributeValue timeLocVal:timeLocVals){
+                Map<String,AttributeValue> timeLoc = timeLocVal.getM();
+                String timeTmp = "from "+timeLoc.get("start").getS()+" to "+timeLoc.get("end").getS()+" "+timeLoc.get("day_in_week").getS();
+                String locTmp = timeLoc.get("location").getS();
+                Map<String,String> mapTmp = new HashMap<>();
+                mapTmp.put("time",timeTmp);
+                mapTmp.put("location",locTmp);
+                timeLocation.add(mapTmp);
+            }
+        }
+        if( items.containsKey("instructor") ){
+            List<AttributeValue> item = items.get("instructor").getL();
+            item.stream().forEach(val->instructors.add(val.getS()));
+        }
+        if( items.containsKey("description") ){
+            desc = items.get("description").getS();
+        }
+        Course course = Course.builder().courseCode(codes).courseName(name).instructors(instructors).courseTimeLoc(timeLocation).description(desc).build();
+        return course;
+    }
+
     public static List<Map<String, AttributeValue>> DBQueryByCourseName(Map<String, AttributeValue> exprAttr, String projections){
         AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
         ScanRequest scanRequest = new ScanRequest()
@@ -133,5 +172,42 @@ public class IntentHelper {
         ScanResult result = client.scan(scanRequest);
         List<Map<String, AttributeValue>> items = result.getItems();
         return items;
+    }
+    public static List<Map<String, AttributeValue>> DBQueryCourseByInstructor(Map<String, AttributeValue> exprAttr, String projections){
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+        ScanRequest scanRequest = new ScanRequest()
+                .withTableName("t_csd_course")
+                .withFilterExpression("contains(instructor,:name)")
+                .withProjectionExpression(projections)
+                .withExpressionAttributeValues(exprAttr);
+        ScanResult result = client.scan(scanRequest);
+        List<Map<String, AttributeValue>> items = result.getItems();
+        return items;
+    }
+    public static List<Map<String, AttributeValue>> DBQueryCourseByTerm(Map<String, AttributeValue> exprAttr, String projections){
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
+        ScanRequest scanRequest = new ScanRequest()
+                .withTableName("t_csd_course")
+                .withFilterExpression("term = :term")
+                .withProjectionExpression(projections)
+                .withExpressionAttributeValues(exprAttr);
+        ScanResult result = client.scan(scanRequest);
+        List<Map<String, AttributeValue>> items = result.getItems();
+        return items;
+    }
+    public static String capitalizeName(String name){
+        String[] nameParts = name.split("\\s");
+        String output = "";
+        for(String namePart:nameParts){
+            char[] nameChar = namePart.toCharArray();
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(Character.toString(nameChar[0]).toUpperCase());
+            for(int i=1; i<nameChar.length;i++){
+                stringBuilder.append(nameChar[i]);
+            }
+            output += stringBuilder.toString()+" ";
+        }
+        output.substring(0,output.length()-1);
+        return output;
     }
 }
