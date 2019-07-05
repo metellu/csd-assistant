@@ -74,7 +74,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             ScanRequest scanReq = new ScanRequest()
                     .withTableName("t_csd_course")
                     .withFilterExpression("contains(course_code,:code)")
-                    .withProjectionExpression("course_name,course_time,instructor")
+                    .withProjectionExpression("course_name,course_code,course_time,instructor,description")
                     .withExpressionAttributeValues(exprAttr);
             ScanResult result = client.scan(scanReq);
             Map<String, String> courseInfo = retrieveCourseTime(result);
@@ -97,7 +97,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             ScanRequest scanReq = new ScanRequest()
                     .withTableName("t_csd_course")
                     .withFilterExpression("course_name = :name")
-                    .withProjectionExpression("course_code, time_location, instructor")
+                    .withProjectionExpression("course_name, course_code, time_location, instructor,description")
                     .withExpressionAttributeValues(exprAttr);
             ScanResult result = client.scan(scanReq);
             Map<String, String> courseInfo = retrieveCourseTime(result);
