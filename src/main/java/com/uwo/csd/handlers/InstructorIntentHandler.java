@@ -5,13 +5,6 @@ import com.amazon.ask.model.Intent;
 import com.amazon.ask.model.IntentRequest;
 import com.amazon.ask.model.Response;
 import com.amazon.ask.model.Slot;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.model.ScanRequest;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.uwo.csd.util.IntentHelper;
 
@@ -32,6 +25,8 @@ public class InstructorIntentHandler implements IntentRequestHandler{
         String title      = "";
         String interests  = "";
         String gender     = "";
+        String courseName = "";
+        String courseCode = "";
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
             Map<String, Slot> slots = request.getIntent().getSlots();
@@ -41,9 +36,14 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                 Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
                 if (attr.containsKey("instructor")) {
                     instructor = (String)attr.get("instructor");
+                    if(instructor.indexOf("|")>0){
+                        String[] tutors = instructor.split("\\|");
+                        speechText = "I found this course is co-hosted by professor "+IntentHelper.capitalizeName(tutors[0])+" and professor "+ IntentHelper.capitalizeName(tutors[1])+". Please tell me which instructor you would like to know? ";
+                        return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech(speechText).build();
+                    }
                 }
                 else{
-                    return input.getResponseBuilder().addElicitSlotDirective("instructor",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
+                    return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
                 }
             }
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
@@ -59,13 +59,13 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                     instructor = items.get(0).get("fullname").getS();
                     Slot slot = Slot.builder().withName("instructor_fullname").withValue(instructor).build();
                     Intent intent = Intent.builder().withName("InstructorIntent").putSlotsItem("instructor_fullname",slot).build();
-                    return input.getResponseBuilder().addConfirmSlotDirective("instructor_fullname",intent).withSpeech("Did you mean professor"+instructor+"?").build();
+                    return input.getResponseBuilder().addConfirmSlotDirective("instructor_fullname",intent).withSpeech("Did you mean professor "+ IntentHelper.capitalizeName(instructor) +"?").build();
                 }
             }
 
             exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
             List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"title, research_interests, gender");
-
+            List<Map<String, AttributeValue>> courseItems = IntentHelper.DBQueryCourseByInstructor(exprAttr,"course_name, course_code, time_location, description");
 
             if (items.size() == 0) {
                 return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
@@ -74,20 +74,38 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                 if (item.containsKey("research_interests")) {
                     interests = item.get("research_interests").getS();
                 }
-                if( item.containsKey("title") ){
+                if (item.containsKey("title")) {
                     title = item.get("title").getS();
-                    if( title.startsWith("assistant") ){
-                        title = "an "+title;
-                    }
-                    else{
-                        title = "a "+title;
+                    if (title.startsWith("assistant")) {
+                        title = "an " + title;
+                    } else {
+                        title = "a " + title;
                     }
                 }
-                if( item.containsKey("gender") ){
+                if (item.containsKey("gender")) {
                     gender = item.get("gender").getS();
-                    gender = gender.equals("male")?"His":"Her";
+                    gender = gender.equals("male") ? "His" : "Her";
                 }
-                speechText = instructor +" is "+title+" of the department of computer science at the Western University. "+ gender +" research interests includes "+interests;
+                speechText = instructor + " is " + title + " of the department of computer science at the Western University. " + gender + " research interests includes " + interests;
+                speechText += ". Currently he is teaching ";
+                for (int i = 0; i < courseItems.size(); i++) {
+                    if (courseItems.get(i).containsKey("course_name")) {
+                        courseName = courseItems.get(i).get("course_name").getS();
+                        List<AttributeValue> courseCodes = courseItems.get(i).get("course_code").getL();
+                        if (courseCodes.size() > 1) {
+                            courseCode = "CS" + courseCodes.get(0).getS() + "/" + courseCodes.get(1).getS();
+                        } else {
+                            courseCode = courseCodes.get(0).getS();
+                        }
+                        Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
+                        attr.put("course_name", courseName);
+                        attr.put("course_code", courseCode);
+                        attr.put("course_desc", courseItems.get(i).get("description").getS());
+                        input.getAttributesManager().setSessionAttributes(attr);
+                        speechText += courseCode + " " + courseName + " and ";
+                    }
+                }
+                speechText = speechText.substring(0,speechText.lastIndexOf("and"));
             }
         }
         catch(Exception ex){
