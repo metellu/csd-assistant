@@ -17,7 +17,7 @@ public class HelpIntentHandler implements RequestHandler {
 
     @Override
     public Optional<Response> handle(HandlerInput input) {
-        String speechText = "You can say hello to me!";
+        String speechText = "You can ask questions about course time, description, instructor info as well as your eligibility to enroll into a certain course. For instant, you may ask 'Am I allowed to enroll in Intro to data science'";
         return input.getResponseBuilder()
                 .withSpeech(speechText)
                 .withSimpleCard("HelloWorld", speechText)
