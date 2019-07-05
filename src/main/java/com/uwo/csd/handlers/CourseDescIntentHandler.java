@@ -7,6 +7,7 @@ import com.amazon.ask.model.IntentRequest;
 import com.amazon.ask.model.Response;
 import com.amazon.ask.model.Slot;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.uwo.csd.entity.Course;
 import com.uwo.csd.util.IntentHelper;
 import java.util.*;
 
@@ -21,9 +22,9 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
         String speechText = "";
         String name = "";
         String code = "";
-        String tutor = "";
-        String location = "";
         String eligStr = "";
+        Course course = Course.builder().build();
+        boolean useCache = false;
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
             Intent intent = request.getIntent();
@@ -31,63 +32,95 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
 
             name = IntentHelper.getCourseNameIfExists(slots);
             code = IntentHelper.getCourseCodeIfExists(slots);
-            eligStr = IntentHelper.getSpecifiedSlotValueIfExists(slots,"eligibility_confirm");
-            if( IntentHelper.isStringValid(eligStr) && (eligStr.equals("yes") || eligStr.equals("yeap"))) {
-                Intent eligIntent = Intent.builder().withName("EnrollmentEligibilityIntent").build();
-                return input.getResponseBuilder().addDelegateDirective(eligIntent).build();
-            }
+            //eligStr = IntentHelper.getSpecifiedSlotValueIfExists(slots,"eligibility_confirm");
+            //if( IntentHelper.isStringValid(eligStr) && (eligStr.equals("yes") || eligStr.equals("yeap"))) {
+            //    Intent eligIntent = Intent.builder().withName("EnrollmentEligibilityIntent").build();
+            //    return input.getResponseBuilder().addDelegateDirective(eligIntent).build();
+            //}
 
             Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
-            eligStr = (String) sessionAttr.get("eligibility_confirm");
+            //eligStr = (String) sessionAttr.get("eligibility_confirm");
+
 
             if( code.isEmpty() && name.isEmpty() ) {
-                if (sessionAttr != null && sessionAttr.containsKey("course_name")) {
-                    name = (String) sessionAttr.get("course_name");
+                if ( sessionAttr.containsKey("course_name") && IntentHelper.isStringValid((String)sessionAttr.get("course_name")) ) {
+                    name = (String)sessionAttr.get("course_name");
                 } else {
                     //if course name is presented neither in slot nor in session, the skill needs to prompt user to provide one.
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Please tell me which course you want to query?").build();
                 }
             }
-
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
             List<AttributeValue> timeLocationMap = new ArrayList<>();
             if( !code.isEmpty() ) {
-                exprAttr.put(":courseCode", new AttributeValue().withS(code));
-                List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByCourseCode(exprAttr,"course_name,description,instructor,time_location");
-                if( items.size()==0 ){
-                    return input.getResponseBuilder().addElicitSlotDirective("course_name",intent).withSpeech("Sorry, course CS"+code+" may not be available this term. In order to avoid ambiguity, please provide me with the course name.").build();
-                }
-                else{
-                    name = items.get(0).get("course_name").getS();
-                    List<AttributeValue> tutors = items.get(0).get("instructor").getL();
-                    for(AttributeValue tutorVal:tutors){
-                        tutor += tutorVal.getS()+" ";
+                if( sessionAttr.containsKey("course_code") ){//if the queried course exists in session
+                    String codes = (String)sessionAttr.get("course_code");
+                    List<String> codesArr = Arrays.asList(codes.split("/"));
+                    if(codesArr.contains(code)){
+                        speechText = (String)sessionAttr.get("course_desc");
+                        useCache = true;
                     }
-                    tutor = tutor.substring(0, tutor.lastIndexOf(" "));
-                    timeLocationMap = items.get(0).get("time_location").getL();
-                    speechText = items.get(0).get("description").getS();
+                }
+                else {
+                    exprAttr.put(":courseCode", new AttributeValue().withS(code));
+                    List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByCourseCode(exprAttr, "course_name,course_code, description,instructor,time_location");
+                    if (items.size() == 0) {
+                        return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course CS" + code + " may not be available this term. In order to avoid ambiguity, please provide me with the course name.").build();
+                    } else {
+                        course = IntentHelper.buildCourseObj(items.get(0));
+                        speechText = course.getDescription();
+                    }
                 }
             }
             else if( !name.isEmpty()) {
-                exprAttr.put(":courseName", new AttributeValue().withS(name));
-                List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByCourseName(exprAttr,"description, instructor,time_location");
-                if (items.size() == 0) {
-                    //if none item is retrieved, it says that the course name provided by the user is invalid. So we need to prompt the user to give another one.
-                    return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course " + name + " is not available this term. Would you like to try another course?").build();
-                } else {
-                    speechText = items.get(0).get("description").getS();
-                    List<AttributeValue> tutors = items.get(0).get("instructor").getL();
-                    for(AttributeValue tutorVal:tutors){
-                        tutor += tutorVal.getS()+" ";
+                if( sessionAttr.containsKey("course_name")){//if the queried course exists in session
+                    if(((String)sessionAttr.get("course_name")).equalsIgnoreCase(name)){
+                        speechText = (String)sessionAttr.get("course_desc");
+                        useCache = true;
                     }
-                    tutor = tutor.substring(0, tutor.lastIndexOf(" "));
-                    timeLocationMap = items.get(0).get("time_location").getL();
+                }
+                else {
+                    exprAttr.put(":courseName", new AttributeValue().withS(name));
+                    List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByCourseName(exprAttr, "course_name, course_code, description, instructor,time_location");
+                    if (items.size() == 0) {
+                        //if none item is retrieved, it says that the course name provided by the user is invalid. So we need to prompt the user to give another one.
+                        return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course " + name + " is not available this term. Would you like to try another course?").build();
+                    } else {
+                        course = IntentHelper.buildCourseObj(items.get(0));
+                        speechText = course.getDescription();
+                    }
                 }
             }
-            sessionAttr.put("instructor",tutor);
-            sessionAttr.put("course_name",name);
-            sessionAttr.put("time_location",timeLocationMap);
-            input.getAttributesManager().setSessionAttributes(sessionAttr);
+            if(useCache == false) {
+                List<String> tutors = course.getInstructors();
+                String tutorConcat = "";
+                if( tutors==null || tutors.size() == 0 ){
+                    tutorConcat = "";
+                }
+                else {
+                    tutorConcat = "";
+                    for (String tutor : tutors) {
+                        tutorConcat += tutor + "|";
+                    }
+                }
+                if( tutorConcat.contains("|") ) {
+                    tutorConcat = tutorConcat.substring(0, tutorConcat.lastIndexOf("|"));
+                }
+                sessionAttr.put("instructor", tutorConcat);
+                sessionAttr.put("course_name", course.getCourseName());
+                List<String> codeTmps = course.getCourseCode();
+                String codeConcat = "";
+                if( codeTmps.size()>1 ){
+                    codeConcat = codeTmps.get(0)+"/"+codeTmps.get(1);
+                }
+                else{
+                    codeConcat = codeTmps.get(0);
+                }
+                sessionAttr.put("course_code",codeConcat);
+                //sessionAttr.put("time_location", timeLocationMap);
+                sessionAttr.put("course_desc", course.getDescription());
+                input.getAttributesManager().setSessionAttributes(sessionAttr);
+            }
         }
         catch(Exception ex){
             speechText += " error:"+ex.getMessage();
