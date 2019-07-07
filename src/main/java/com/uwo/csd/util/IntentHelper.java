@@ -79,6 +79,7 @@ public class IntentHelper {
         String value = "";
         if( input.containsKey(slotName) ){
             Slot slot = input.get(slotName);
+            //String tmp = slot.getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
             String tmp = slot.getValue();
             if( isStringValid(tmp) ){
                 value = tmp;
@@ -209,5 +210,13 @@ public class IntentHelper {
         }
         output.substring(0,output.length()-1);
         return output;
+    }
+
+    public static String formCourseCodeString(List<AttributeValue> codeAttr){
+        String returned = "";
+        for(AttributeValue value:codeAttr){
+            returned += value.getS()+"/";
+        }
+        return returned.substring(0,returned.lastIndexOf("/"));
     }
 }
