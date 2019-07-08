@@ -25,8 +25,10 @@ public class InstructorIntentHandler implements IntentRequestHandler{
         String title      = "";
         String interests  = "";
         String gender     = "";
+        String pronoun    = "";
         String courseName = "";
         String courseCode = "";
+        boolean noInput   = false;
         try {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
             Map<String, Slot> slots = request.getIntent().getSlots();
@@ -35,6 +37,7 @@ public class InstructorIntentHandler implements IntentRequestHandler{
             if ( instructor.isEmpty() ) {
                 Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
                 if (attr.containsKey("instructor")) {
+                    noInput = true;
                     instructor = (String)attr.get("instructor");
                     if(instructor.indexOf("|")>0){
                         String[] tutors = instructor.split("\\|");
@@ -62,21 +65,22 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                     return input.getResponseBuilder().addConfirmSlotDirective("instructor_fullname",intent).withSpeech("Did you mean professor "+ IntentHelper.capitalizeName(instructor) +"?").build();
                 }
             }
-
             exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
             List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"title, research_interests, gender");
             List<Map<String, AttributeValue>> courseItems = IntentHelper.DBQueryCourseByInstructor(exprAttr,"course_name, course_code, time_location, description");
 
             if (items.size() == 0) {
-                return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
+                speechText = "Sorry, it seems the instructor you're looking for is not working at Computer Science Department any more. If you would like to look up another instructor, please give me the instructor's full name.";
+                return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech(speechText).build();
             } else {
+
                 Map<String, AttributeValue> item = items.get(0);
                 if (item.containsKey("research_interests")) {
                     interests = item.get("research_interests").getS();
                 }
                 if (item.containsKey("title")) {
                     title = item.get("title").getS();
-                    if (title.startsWith("assistant")) {
+                    if (title.startsWith("a")) {
                         title = "an " + title;
                     } else {
                         title = "a " + title;
@@ -85,9 +89,12 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                 if (item.containsKey("gender")) {
                     gender = item.get("gender").getS();
                     gender = gender.equals("male") ? "His" : "Her";
+                    pronoun = gender.equals("male")?"he":"she";
                 }
-                speechText = instructor + " is " + title + " of the department of computer science at the Western University. " + gender + " research interests includes " + interests;
-                speechText += ". Currently he is teaching ";
+
+                speechText = "Dr."+IntentHelper.capitalizeName(instructor) + " is " + title + " of the department of computer science at the Western University. " + gender + " research interests includes " + interests;
+                speechText += ". Currently "+pronoun+" is teaching ";
+
                 for (int i = 0; i < courseItems.size(); i++) {
                     if (courseItems.get(i).containsKey("course_name")) {
                         courseName = courseItems.get(i).get("course_name").getS();
@@ -97,11 +104,13 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                         } else {
                             courseCode = courseCodes.get(0).getS();
                         }
-                        Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
-                        attr.put("course_name", courseName);
-                        attr.put("course_code", courseCode);
-                        attr.put("course_desc", courseItems.get(i).get("description").getS());
-                        input.getAttributesManager().setSessionAttributes(attr);
+                        if( noInput == false ) {
+                            Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
+                            attr.put("course_name", courseName);
+                            attr.put("course_code", courseCode);
+                            attr.put("course_desc", courseItems.get(i).get("description").getS());
+                            input.getAttributesManager().setSessionAttributes(attr);
+                        }
                         speechText += courseCode + " " + courseName + " and ";
                     }
                 }
