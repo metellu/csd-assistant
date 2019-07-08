@@ -26,6 +26,9 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
         Map<String, Slot> slots = request.getIntent().getSlots();
         String courseName = "";
         String courseCode = "";
+        String term       = "";
+        String desc       = "";
+        String instructor = "";
         if( slots != null ) {
             if( slots.containsKey("course_name") ) {
                 Slot nameSlot = slots.get("course_name");
@@ -97,7 +100,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             ScanRequest scanReq = new ScanRequest()
                     .withTableName("t_csd_course")
                     .withFilterExpression("course_name = :name")
-                    .withProjectionExpression("course_name, course_code, time_location, instructor,description")
+                    .withProjectionExpression("course_name, course_code, time_location, instructor,description,term")
                     .withExpressionAttributeValues(exprAttr);
             ScanResult result = client.scan(scanReq);
             Map<String, String> courseInfo = retrieveCourseTime(result);
@@ -107,16 +110,30 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             if( courseInfo.containsKey("time") ) {
                 timeConcat = courseInfo.get("time");
             }
+            if( courseInfo.containsKey("term") ){
+                term = courseInfo.get("term");
+            }
+            if( courseInfo.containsKey("desc") ){
+                desc = courseInfo.get("desc");
+            }
+            if( courseInfo.containsKey("instructor") ){
+                instructor = courseInfo.get("instructor");
+            }
             if( timeConcat.equals("") ) {
                 //Since the slot validation is disabled in the skill side,it is implemented manually here. When no item can be retrieved from DB, I assume that the input
                 // course name is not valid. In that case, the code will prompt user to try another course.
                 return input.getResponseBuilder().addElicitSlotDirective("course_name",intentRequest.getIntent()).withSpeech("Sorry, course "+ courseName+ "may be not available this year. Please tell me another course, if you would like to continue.").build();
             } else{
-                speechText = "Course CS" + codeConcat + " " + courseName + " starts " + timeConcat;
+                speechText = "Course CS" + codeConcat + " " + courseName + " starts " + timeConcat + "in "+ term + " term";
             }
         }
-
-        input.getAttributesManager().setSessionAttributes(Collections.singletonMap("course_name", courseName));
+        Map<String,Object> session = new HashMap<>();
+        session.put("course_name",courseName);
+        session.put("course_desc",desc);
+        session.put("course_time",timeConcat);
+        session.put("instructor",instructor);
+        session.put("course_code",codeConcat.replace(" or ","/"));
+        input.getAttributesManager().setSessionAttributes(session);
 
         //in order to enable dialog, the returned response should be config to keep the session alive.
         return input.getResponseBuilder().
@@ -126,8 +143,9 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
     private Map<String,String> retrieveCourseTime(ScanResult result) {
         String timeConcat = "";
         String codeConcat = "";
-        String name = "";
+        String name        = "";
         String tutorConcat = "";
+        String term        = "";
         List<String> tutors = new ArrayList<>();
         Map<String,String> returned = new HashMap<String,String>();
         List<Map<String, AttributeValue>> items = result.getItems();
@@ -167,9 +185,17 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             if( item.containsKey("instructor") ){
                 AttributeValue tutorVals = item.get("instructor");
                 for(AttributeValue tutorVal:tutorVals.getL()){
-                    tutorConcat += tutorVal.getS()+" ";
+                    tutorConcat += tutorVal.getS()+"|";
                 }
+                tutorConcat = tutorConcat.substring(0,tutorConcat.lastIndexOf("|"));
                 returned.put("instructor",tutorConcat);
+            }
+            if( item.containsKey("term") ){
+                term = item.get("term").getS();
+                returned.put("term",term);
+            }
+            if( item.containsKey("description") ){
+                returned.put("desc",item.get("description").getS());
             }
         }
         return returned;
