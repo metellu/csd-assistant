@@ -219,4 +219,11 @@ public class IntentHelper {
         }
         return returned.substring(0,returned.lastIndexOf("/"));
     }
+    public static String formInstructorString(List<AttributeValue> instructorAttr){
+        String returned = "";
+        for(AttributeValue value:instructorAttr){
+            returned += value.getS()+"|";
+        }
+        return returned.substring(0,returned.lastIndexOf("|"));
+    }
 }
