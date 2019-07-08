@@ -37,7 +37,6 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
             //    Intent eligIntent = Intent.builder().withName("EnrollmentEligibilityIntent").build();
             //    return input.getResponseBuilder().addDelegateDirective(eligIntent).build();
             //}
-
             Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
             //eligStr = (String) sessionAttr.get("eligibility_confirm");
 
@@ -46,8 +45,9 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                 if ( sessionAttr.containsKey("course_name") && IntentHelper.isStringValid((String)sessionAttr.get("course_name")) ) {
                     name = (String)sessionAttr.get("course_name");
                 } else {
+                    speechText += "Please tell me which course you want to query?";
                     //if course name is presented neither in slot nor in session, the skill needs to prompt user to provide one.
-                    return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Please tell me which course you want to query?").build();
+                    return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech(speechText).build();
                 }
             }
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
@@ -60,8 +60,10 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                         speechText = (String)sessionAttr.get("course_desc");
                         useCache = true;
                     }
+
                 }
-                else {
+                if(useCache!=true)
+                {
                     exprAttr.put(":courseCode", new AttributeValue().withS(code));
                     List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByCourseCode(exprAttr, "course_name,course_code, description,instructor,time_location");
                     if (items.size() == 0) {
@@ -73,18 +75,20 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                 }
             }
             else if( !name.isEmpty()) {
+                name = slots.get("course_name").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
                 if( sessionAttr.containsKey("course_name")){//if the queried course exists in session
                     if(((String)sessionAttr.get("course_name")).equalsIgnoreCase(name)){
                         speechText = (String)sessionAttr.get("course_desc");
                         useCache = true;
                     }
                 }
-                else {
+                if( useCache!= true )
+                {
                     exprAttr.put(":courseName", new AttributeValue().withS(name));
                     List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByCourseName(exprAttr, "course_name, course_code, description, instructor,time_location");
                     if (items.size() == 0) {
                         //if none item is retrieved, it says that the course name provided by the user is invalid. So we need to prompt the user to give another one.
-                        return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course " + name + " is not available this term. Would you like to try another course?").build();
+                        return input.getResponseBuilder().addElicitSlotDirective("course_name", intent).withSpeech("Sorry, course " + name + " may not be available this year. If you would like to know about another course, please give me the course name.").build();
                     } else {
                         course = IntentHelper.buildCourseObj(items.get(0));
                         speechText = course.getDescription();
@@ -123,7 +127,7 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
             }
         }
         catch(Exception ex){
-            speechText += " error:"+ex.getMessage();
+            speechText += "";
         }
 
         //if( !IntentHelper.isStringValid(eligStr) ){
