@@ -41,7 +41,7 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                     instructor = (String)attr.get("instructor");
                     if(instructor.indexOf("|")>0){
                         String[] tutors = instructor.split("\\|");
-                        speechText = "I found this course is co-hosted by professor "+IntentHelper.capitalizeName(tutors[0])+" and professor "+ IntentHelper.capitalizeName(tutors[1])+". Please tell me which instructor you would like to know? ";
+                        speechText = "I found this course is co-hosted by professor "+IntentHelper.capitalizeName(tutors[0])+" and professor "+ IntentHelper.capitalizeName(tutors[1])+". Please tell me which instructor you would like to know. ";
                         return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech(speechText).build();
                     }
                 }
@@ -67,7 +67,7 @@ public class InstructorIntentHandler implements IntentRequestHandler{
             }
             exprAttr.put(":name", new AttributeValue().withS(instructor.toLowerCase()));
             List<Map<String, AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"title, research_interests, gender");
-            List<Map<String, AttributeValue>> courseItems = IntentHelper.DBQueryCourseByInstructor(exprAttr,"course_name, course_code, time_location, description");
+            List<Map<String, AttributeValue>> courseItems = IntentHelper.DBQueryCourseByInstructor(exprAttr,"course_name, course_code, time_location, description, term");
 
             if (items.size() == 0) {
                 speechText = "Sorry, it seems the instructor you're looking for is not working at Computer Science Department any more. If you would like to look up another instructor, please give me the instructor's full name.";
@@ -89,7 +89,7 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                 if (item.containsKey("gender")) {
                     gender = item.get("gender").getS();
                     gender = gender.equals("male") ? "His" : "Her";
-                    pronoun = gender.equals("male")?"he":"she";
+                    pronoun = gender.equals("His") ? "he" : "she";
                 }
 
                 speechText = "Dr."+IntentHelper.capitalizeName(instructor) + " is " + title + " of the department of computer science at the Western University. " + gender + " research interests includes " + interests;
@@ -111,7 +111,7 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                             attr.put("course_desc", courseItems.get(i).get("description").getS());
                             input.getAttributesManager().setSessionAttributes(attr);
                         }
-                        speechText += courseCode + " " + courseName + " and ";
+                        speechText += courseCode + " " + courseName + " in "+courseItems.get(i).get("term").getS()+" term and ";
                     }
                 }
                 speechText = speechText.substring(0,speechText.lastIndexOf("and"));
