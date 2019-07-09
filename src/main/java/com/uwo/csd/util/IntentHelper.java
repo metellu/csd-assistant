@@ -8,10 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.uwo.csd.entity.Course;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class IntentHelper {
     public static boolean isStringValid(String input){
@@ -225,5 +222,66 @@ public class IntentHelper {
             returned += value.getS()+"|";
         }
         return returned.substring(0,returned.lastIndexOf("|"));
+    }
+    public static Map<String,String> formCourseTimeMap(Map<String,AttributeValue> item){
+        String timeConcat = "";
+        Map<String,String> returned = new HashMap<>();
+        if( item.containsKey("time_location") ){
+            AttributeValue timeVals = item.get("time_location");
+            if (timeVals!=null){
+                for (AttributeValue timeVal : timeVals.getL()) {
+                    Map<String,AttributeValue> timeMap = timeVal.getM();
+                    String tmp = "from "+timeMap.get("start").getS()+" to "+timeMap.get("end").getS()+" "+timeMap.get("day_in_week").getS();
+                    returned.put(timeMap.get("day_in_week").getS(),tmp);
+                }
+            }
+        }
+        return returned;
+    }
+    public static String convertDayInWeek(int dayInWeek){
+        String day = "";
+        Map<Integer,String> dayOfWeek = new HashMap<>();
+        dayOfWeek.put(1,"Monday");
+        dayOfWeek.put(2,"Tuesday");
+        dayOfWeek.put(3,"Wednesday");
+        dayOfWeek.put(4,"Thursday");
+        dayOfWeek.put(5,"Friday");
+        dayOfWeek.put(6,"Saturday");
+        dayOfWeek.put(7,"Sunday");
+        if( dayInWeek>0 && dayInWeek<8){
+            day = dayOfWeek.get(dayInWeek);
+        }
+        return day;
+    }
+    public static int getCurrentMonth(){
+        Calendar cal = Calendar.getInstance();
+        int month = cal.get(Calendar.MONTH)+1;
+        return month;
+    }
+    public static String determineTerm(int month){
+        String term = "";
+        if(month>=1 && month<=4){
+            term = "winter";
+        }
+        else if( month>=5 && month<=8 ){
+            term = "summer";
+        }
+        else if( month>=9 && month<=12 ){
+            term = "fall";
+        }
+        return term;
+    }
+    public static String determineEnrollmentTerm(int month){
+        String term = "";
+        if(month>=12 && month<=1){
+            term = "winter";
+        }
+        else if( month>=4 && month<=5 ){
+            term = "summer";
+        }
+        else if( month>=8 && month<=9 ){
+            term = "fall";
+        }
+        return term;
     }
 }
