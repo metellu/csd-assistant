@@ -100,7 +100,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
             attr.put("confirms",confirms);
             if (confirms.stream().anyMatch(str -> IntentHelper.isStringValid(str))) {
                 if (confirms.stream().anyMatch(str -> str.equalsIgnoreCase("no"))) {
-                    speechText = "Unfortunately, it appears you don't meet all the prerequisites. You probably will not be allowed to enroll. However, you still can communicate with the instructor to gain his or her approval for enrollment. Would you like to know his or her contact info?";
+                    speechText = "Unfortunately, it appears you don't meet all the prerequisites. You probably will not be allowed to enroll. However, you still can communicate with the instructor to gain his or her approval for enrollment. Would you like to know the professor's contact info?";
                     confirms.clear();
                     attr.replace("confirms",confirms);
                     prerequisite.clear();
@@ -116,7 +116,20 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                         input.getAttributesManager().setSessionAttributes(attr);
                         return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(cond).build();
                     } else {
-                        speechText = "Congratulations. You meet all the prerequisites. You may be able to enroll in this course. ";
+                        speechText = "Congratulations. You meet all the prerequisites. ";
+                        int month = IntentHelper.getCurrentMonth();
+                        String curTerm = IntentHelper.determineEnrollmentTerm(month);
+                        String term = "";
+                        if( attr.containsKey("term") ) {
+                            term = (String)attr.get("term");
+                        }
+                        if(!term.equalsIgnoreCase(curTerm)){
+                            speechText += "But this course is scheduled for "+term +" term. So you may not be able to enroll at this moment.";
+                        }
+                        else{
+                            speechText += "You may be able to enroll in this course. To sign up for the course, you are required to login student.uwo.ca and finish the enrollment on that website.";
+                        }
+
                     }
                 }
             }
@@ -128,7 +141,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 if ( IntentHelper.isStringValid(courseName) ) {
                     Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
                     exprAttr.put(":courseName", new AttributeValue().withS(courseName));
-                    items = IntentHelper.DBQueryByCourseName(exprAttr,"prerequisites,course_name,course_code,instructor");
+                    items = IntentHelper.DBQueryByCourseName(exprAttr,"prerequisites,course_name,course_code,instructor,term");
 
                     if (items.size() == 0) {
                         return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, the course you're looking for seems unavailable this year. Please provide me with a course name, if you would like to try another course.").build();
@@ -137,15 +150,17 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 else if( IntentHelper.isStringValid(courseCode) ){
                     Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
                     exprAttr.put(":courseCode", new AttributeValue().withS(courseCode));
-                    items = IntentHelper.DBQueryByCourseCode(exprAttr,"prerequisites,course_name,course_code");
+                    items = IntentHelper.DBQueryByCourseCode(exprAttr,"prerequisites,course_name,course_code,term");
                     if (items.size() == 0) {
                         return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, the course you're looking for seems unavailable this year. Please provide me with a course name, if you would like to try another course.").build();
                     }
                 }
                 Map<String, AttributeValue> item = items.get(0);
                 if (item.containsKey("prerequisites")) {
+
                     Map<String,AttributeValue> attrVals = item.get("prerequisites").getM();
                     if( attrVals.containsKey(degree) ){
+                        String term = item.get("term").getS();
                         List<AttributeValue> attrList = attrVals.get(degree).getL();
                         for( AttributeValue attrVal: attrList ){
                             prerequisite.add(attrVal.getS());
@@ -155,11 +170,24 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                         String instructor = IntentHelper.formInstructorString(item.get("instructor").getL());
                         attr.put("prerequisites", prerequisite);
                         attr.put("instructor",instructor);
+                        attr.put("term",term);
                         input.getAttributesManager().setSessionAttributes(attr);
                         return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                     }
                     else{
-                        speechText = "It appears that there is no prequisites list for a "+degree+" student. You may be able to enroll in that course.";
+                        speechText = "It appears that there is no prequisites list for a "+degree+" student. ";
+                        int month = IntentHelper.getCurrentMonth();
+                        String curTerm = IntentHelper.determineEnrollmentTerm(month);
+                        String term = "";
+                        if( attr.containsKey("term") ) {
+                            term = (String)attr.get("term");
+                        }
+                        if(!term.equalsIgnoreCase(curTerm)){
+                            speechText += "But this course is scheduled for "+term +" term. So you may not be able to enroll at this moment.";
+                        }
+                        else{
+                            speechText += "You may be able to enroll in this course. To sign up for the course, you are required to login student.uwo.ca and finish the enrollment on that website.";
+                        }
                     }
                     courseName = (courseName != null && !courseName.isEmpty()) ? courseName : item.get("course_name").getS();
                     Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
