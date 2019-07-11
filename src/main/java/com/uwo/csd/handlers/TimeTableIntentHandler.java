@@ -142,8 +142,10 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, course " + courseName + "may be not available this year. Please tell me another course, if you would like to continue.").build();
                 } else {
                     speechText = "Course CS" + codeConcat + " " + courseName + " starts " + timeConcat + "in " + term + " term.";
-                    speechText += " Do you also want to know the classroom of the course?";
-                    return input.getResponseBuilder().addElicitSlotDirective("venue_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
+                    if( !IntentHelper.isStringValid(venueQuery) ) {
+                        speechText += " Do you also want to know the classroom of the course?";
+                        return input.getResponseBuilder().addElicitSlotDirective("venue_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
+                    }
                 }
             }
             Map<String, Object> session = new HashMap<>();
@@ -157,6 +159,8 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
         catch(Exception ex){
             speechText = "error:"+ex.toString()+ex.getLocalizedMessage();
         }
+
+        speechText = "Ok.";
         //in order to enable dialog, the returned response should be config to keep the session alive.
         return input.getResponseBuilder().
                 withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).withShouldEndSession(false).build();
