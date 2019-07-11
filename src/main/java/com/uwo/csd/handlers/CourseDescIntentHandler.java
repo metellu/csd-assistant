@@ -22,6 +22,7 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
         String speechText = "";
         String name = "";
         String code = "";
+        String timeConfirm = "";
         String eligStr = "";
         Course course = Course.builder().build();
         boolean useCache = false;
@@ -32,6 +33,7 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
 
             name = IntentHelper.getCourseNameIfExists(slots);
             code = IntentHelper.getCourseCodeIfExists(slots);
+            timeConfirm = IntentHelper.getSpecifiedSlotValueIfExists(slots,"time_confirm");
             //eligStr = IntentHelper.getSpecifiedSlotValueIfExists(slots,"eligibility_confirm");
             //if( IntentHelper.isStringValid(eligStr) && (eligStr.equals("yes") || eligStr.equals("yeap"))) {
             //    Intent eligIntent = Intent.builder().withName("EnrollmentEligibilityIntent").build();
@@ -50,6 +52,27 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech(speechText).build();
                 }
             }
+
+            if( IntentHelper.isStringValid(timeConfirm) ){
+                timeConfirm = slots.get("time_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+                if( timeConfirm.equalsIgnoreCase("time") ){
+                    Slot nameSlot = Slot.builder().withName("course_name").withValue(name).build();
+                    Slot codeSlot = Slot.builder().withName("course_code").withValue(code).build();
+                    Slot confirmSlot = Slot.builder().withName("venue_confirm").withValue("").build();
+                    Intent timeIntent = Intent.builder().withName("TimeTableIntent").putSlotsItem("course_name",nameSlot).putSlotsItem("course_code",codeSlot).putSlotsItem("venue_confirm",confirmSlot).build();
+                    return input.getResponseBuilder().addDelegateDirective(timeIntent).build();
+                }
+                else if( timeConfirm.equalsIgnoreCase("instructor") ){
+                    String instr = "";
+                    if( input.getAttributesManager().getSessionAttributes().containsKey("instructor") ) {
+                        instr = (String) input.getAttributesManager().getSessionAttributes().get("instructor");
+                    }
+                    Slot instructor = Slot.builder().withName("instructor_fullname").withValue(instr).build();
+                    Intent instructorIntent = Intent.builder().withName("InstructorIntent").putSlotsItem("instructor_fullname",instructor).build();
+                    return input.getResponseBuilder().addDelegateDirective(instructorIntent).build();
+                }
+            }
+
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
             List<AttributeValue> timeLocationMap = new ArrayList<>();
             if( !code.isEmpty() ) {
@@ -125,6 +148,14 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                 sessionAttr.put("course_desc", course.getDescription());
                 input.getAttributesManager().setSessionAttributes(sessionAttr);
             }
+            if( !IntentHelper.isStringValid(timeConfirm) ){
+                speechText += " If you're interested in this course, I could provide more information on the course time and instructor. Just tell me which one you would like to know, course time or instructor?";
+                return input.getResponseBuilder().addElicitSlotDirective("time_confirm",intentRequest.getIntent()).withSpeech(speechText).build();
+            }
+            else{
+                speechText = "Ok. ";
+            }
+
         }
         catch(Exception ex){
             speechText += "";
