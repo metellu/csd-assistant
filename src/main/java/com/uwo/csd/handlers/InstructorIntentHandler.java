@@ -39,15 +39,16 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                 if (attr.containsKey("instructor")) {
                     noInput = true;
                     instructor = (String)attr.get("instructor");
-                    if(instructor.indexOf("|")>0){
-                        String[] tutors = instructor.split("\\|");
-                        speechText = "I found this course is co-hosted by professor "+IntentHelper.capitalizeName(tutors[0])+" and professor "+ IntentHelper.capitalizeName(tutors[1])+". Please tell me which instructor you would like to know. ";
-                        return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech(speechText).build();
-                    }
+
                 }
                 else{
                     return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech("Please tell me which instructor you would like to know?").build();
                 }
+            }
+            if(instructor.indexOf("|")>0){
+                String[] tutors = instructor.split("\\|");
+                speechText = "I found this course is co-hosted by professor "+IntentHelper.capitalizeName(tutors[0])+" and professor "+ IntentHelper.capitalizeName(tutors[1])+". Please tell me which instructor you would like to know. ";
+                return input.getResponseBuilder().addElicitSlotDirective("instructor_fullname",intentRequest.getIntent()).withSpeech(speechText).build();
             }
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
 
