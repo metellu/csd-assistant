@@ -35,7 +35,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             IntentRequest request = (IntentRequest) input.getRequestEnvelope().getRequest();
 
             Map<String, Slot> slots = request.getIntent().getSlots();
-            String venueQuery = IntentHelper.getSpecifiedSlotValueIfExists(slots, "venue_confirm");
+            String venueQuery = IntentHelper.getSpecifiedSlotValueIfExists(slots, "eligibility_confirm");
 
             if (slots != null) {
                 if (slots.containsKey("course_name")) {
@@ -53,11 +53,9 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                         courseCode = codeSlot.getValue();
                     }
                 }
-            } else {
-                speechText = "slot is null.";
             }
 
-            if ((courseCode == null && courseName == null) || (courseCode != null && courseCode.isEmpty()) && (courseName != null && courseName.isEmpty())) {
+            if ((!IntentHelper.isStringValid(courseName) && !IntentHelper.isStringValid(courseCode)) || (courseCode != null && courseCode.isEmpty()) && (courseName != null && courseName.isEmpty())) {
                 //When user inputs some courses that don't show in the value list of the 'Course' slot type, the skill will send null to the backend.
                 //So here, I used two if conditions. One for no valid course name and course code; The other for all two input values are empty.(may not be useful.)
 
@@ -71,24 +69,27 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, I'm afraid either you are looking for a non-exist course or you didn't provide a valid course name. If you would like to continue, please tell me another course name. ").build();
                 }
             }
-
             if (IntentHelper.isStringValid(venueQuery)) {
-                venueQuery = slots.get("venue_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+                if( slots.get("eligibility_confirm").getResolutions() != null ) {
+                    venueQuery = slots.get("eligibility_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+                }
                 if (venueQuery.equalsIgnoreCase("yes")) {
                     Slot nameSlot = Slot.builder().withName("course_name").withValue(courseName).build();
                     Slot codeSlot = Slot.builder().withName("course_code").withValue("").build();
-                    Intent venueIntent = Intent.builder().putSlotsItem("course_name", nameSlot).putSlotsItem("course_code", codeSlot).withName("VenueIntent").build();
+                    Slot prereqSlot = Slot.builder().withName("prerequisites_confirm").withValue("").build();
+                    Slot degreeSlot = Slot.builder().withName("degree").withValue("").build();
+                    Slot instrSlot  = Slot.builder().withName("instructor_info_confirm").withValue("").build();
+                    Slot startoverSlot = Slot.builder().withName("startover_confirm").withValue("").build();
+                    Intent venueIntent = Intent.builder().putSlotsItem("course_name", nameSlot).putSlotsItem("course_code", codeSlot).putSlotsItem("degree",degreeSlot).putSlotsItem("prerequisites_confirm",prereqSlot).putSlotsItem("instructor_info_confirm",instrSlot).withName("EnrollmentEligibilityIntent").putSlotsItem("startover_confirm",startoverSlot).build();
                     return input.getResponseBuilder().addDelegateDirective(venueIntent).build();
                 }
             }
-
             String codeConcat = "";
             String timeConcat = "";
             String error = "";
 
             AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
-
             if (courseCode != null && !courseCode.isEmpty()) { //if course code is provided by user
                 exprAttr.put(":code", new AttributeValue().withS(courseCode));
                 ScanRequest scanReq = new ScanRequest()
@@ -101,7 +102,6 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                 timeConcat = courseInfo.get("time");
                 courseName = courseInfo.get("name");
                 courseName = courseName;
-
                 speechText = speechText = "Course CS" + courseCode + " " + courseName + " starts " + timeConcat;
                 if (!request.getDialogState().toString().equals("COMPLETED")) {
                     // as mentioned before, course name is defined as an required slot. However, the design of the skill is to take in either a course code or a course name.
@@ -113,6 +113,11 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addDelegateDirective(returnedIntent).build();
                 }
             } else if (courseName != null && !courseName.equals("")) {
+                if( slots.get("course_name").getResolutions()!=null ) {
+                    speechText+="in coursename branch.";
+                    courseName = slots.get("course_name").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+
+                }
                 exprAttr.put(":name", new AttributeValue().withS(courseName));
                 ScanRequest scanReq = new ScanRequest()
                         .withTableName("t_csd_course")
@@ -141,10 +146,10 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                     // course name is not valid. In that case, the code will prompt user to try another course.
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, course " + courseName + "may be not available this year. Please tell me another course, if you would like to continue.").build();
                 } else {
-                    speechText = "Course CS" + codeConcat + " " + courseName + " starts " + timeConcat + "in " + term + " term.";
+                    speechText = "Course CS" + codeConcat + " " + IntentHelper.capitalizeName(courseName) + " starts " + timeConcat + "in " + term + " term.";
                     if( !IntentHelper.isStringValid(venueQuery) ) {
-                        speechText += " Do you also want to know the classroom of the course?";
-                        return input.getResponseBuilder().addElicitSlotDirective("venue_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
+                        speechText += " If you're interested in enrolling in this course, I can check your eligibility. Do you want me to continue with the eligibility check? ";
+                        return input.getResponseBuilder().addElicitSlotDirective("eligibility_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                     }
                 }
             }
@@ -157,10 +162,10 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
             input.getAttributesManager().setSessionAttributes(session);
         }
         catch(Exception ex){
-            speechText = "error:"+ex.toString()+ex.getLocalizedMessage();
+            speechText += "error:"+ex.toString()+ex.getLocalizedMessage();
         }
 
-        speechText = "Ok.";
+        //åspeechText = "Ok.";
         //in order to enable dialog, the returned response should be config to keep the session alive.
         return input.getResponseBuilder().
                 withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).withShouldEndSession(false).build();
@@ -196,7 +201,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                 else {
                     for (AttributeValue timeVal : timeVals.getL()) {
                         Map<String,AttributeValue> timeMap = timeVal.getM();
-                        String tmp = "from "+timeMap.get("start").getS()+" to "+timeMap.get("end").getS()+" "+timeMap.get("day_in_week").getS();
+                        String tmp = "from "+timeMap.get("start").getS()+" to "+timeMap.get("end").getS()+" "+timeMap.get("day_in_week").getS() + " in "+timeMap.get("location").getS();
                         timeConcat = timeConcat + tmp + " or ";
                     }
                     timeConcat = timeConcat.substring(0, timeConcat.lastIndexOf("or"));
