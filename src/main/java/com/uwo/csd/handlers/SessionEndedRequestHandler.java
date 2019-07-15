@@ -19,7 +19,8 @@ public class SessionEndedRequestHandler implements RequestHandler {
     @Override
     public Optional<Response> handle(HandlerInput input) {
         // any cleanup logic goes here
-        return input.getResponseBuilder().build();
+        String speechText = "Thank you for using CSD Assistant. Goodbye.";
+        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).build();
     }
 
 }

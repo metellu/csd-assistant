@@ -16,7 +16,7 @@ public class CancelandStopIntentHandler implements RequestHandler {
 
     @Override
     public Optional<Response> handle(HandlerInput input) {
-        String speechText = "Goodbye";
+        String speechText = "Thank you for using CSD Assistant. Goodbye.";
         return input.getResponseBuilder()
                 .withSpeech(speechText)
                 .withSimpleCard("CSD Assistant", speechText)
