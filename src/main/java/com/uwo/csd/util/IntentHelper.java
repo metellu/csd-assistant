@@ -53,7 +53,8 @@ public class IntentHelper {
     public static String getCourseNameIfExists(Map<String,Slot> input){
         String name = "";
         if( !isCourseNameEmpty(input) ){
-            name = input.get("course_name").getValue();
+            Slot slot = input.get("course_name");
+            name = slot.getValue();
         }
         else{
             name = "";
