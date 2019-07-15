@@ -31,12 +31,15 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
         String confirm    = "";
         String degree     = "";
         String instructor_confirm = "";
+        String startover_confirm = "";
         List<String> prerequisite = new ArrayList<>();
 
         Map<String,Slot> slots = intentRequest.getIntent().getSlots();
         courseName = IntentHelper.getSpecifiedSlotValueIfExists(slots,"course_name");
-        if( IntentHelper.isStringValid(courseName) ){
-            courseName = slots.get("course_name").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+        if( IntentHelper.isStringValid(courseName) ) {
+            if (slots.get("course_name").getResolutions() != null) {
+                courseName = slots.get("course_name").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+            }
         }
         courseCode = IntentHelper.getCourseCodeIfExists(slots);
         degree     = IntentHelper.getSpecifiedSlotValueIfExists(slots,"degree");
@@ -49,19 +52,32 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
             }
         }
         else{
-            degree = slots.get("degree").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+            if( slots.get("degree").getResolutions()!=null ) {
+                degree = slots.get("degree").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+            }
         }
-        try {
+        if (slots.get("prerequisites_confirm").getResolutions() != null) {
             confirm = slots.get("prerequisites_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
         }
-        catch(Exception ex){
-            speechText = ex.getMessage();
-        }
-        try{
+        if (slots.get("instructor_info_confirm").getResolutions() != null) {
             instructor_confirm = slots.get("instructor_info_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
         }
-        catch(Exception ex){
+        if (slots.get("startover_confirm").getResolutions() != null) {
+            startover_confirm = slots.get("startover_confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+        }
 
+        if( IntentHelper.isStringValid(startover_confirm) ){
+            if( startover_confirm.equalsIgnoreCase("yes") ){
+                Slot nameSlot = Slot.builder().withName("course_name").withValue("").build();
+                Slot codeSlot = Slot.builder().withName("course_code").withValue("").build();
+                Slot confirmSlot = Slot.builder().withName("eval_confirm").withValue("").build();
+                Intent intent = Intent.builder().withName("CourseDescIntent").putSlotsItem("course_name",nameSlot).putSlotsItem("course_code",codeSlot).putSlotsItem("eval_confirm",confirmSlot).build();
+                return input.getResponseBuilder().addDelegateDirective(intent).build();
+            }
+            else{
+                speechText = "Ok. Thank you for using CSD Assistant. Goodbye.";
+                return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).build();
+            }
         }
 
         if( IntentHelper.isStringValid(instructor_confirm) && instructor_confirm.equalsIgnoreCase("yes") ){
@@ -206,29 +222,6 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
 
 
                 }
-                /**
-                    if( attrVals.size()== 0 ){
-                        speechText = "Sorry, it seems that there is no available prerequisite for that course.";
-                    }
-                    else {
-                        for (AttributeValue attrVal : attrVals) {
-                            prerequisite.add(attrVal.getS());
-                            preqConcat += attrVal.getS() + ", ";
-                        }
-                        courseName = (courseName != null && !courseName.isEmpty()) ? courseName : item.get("course_name").getS();
-                        Map<String, Object> sessionAttr = input.getAttributesManager().getSessionAttributes();
-                        sessionAttr.put("course_name", courseName);
-                        input.getAttributesManager().setSessionAttributes(sessionAttr);
-                        //preqConcat = preqConcat.substring(0, preqConcat.lastIndexOf(","));
-                        //preqConcat = preqConcat.substring(0,preqConcat.lastIndexOf(","))+" and " + preqConcat.substring(preqConcat.lastIndexOf(",")+2);
-                        speechText = "According to the course description of " + courseName + ", students are expected to meet all the prerequisites to enroll in the course. Please provide yes or no answers to the following questions. Then I can help you determine your eligibility. " + prerequisite.get(0);
-                        prerequisite.remove(0);
-                        attr.put("prerequisites", prerequisite);
-                        input.getAttributesManager().setSessionAttributes(attr);
-                        return input.getResponseBuilder().addElicitSlotDirective("prerequisites_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
-                    }
-                 }
-                 **/
 
             }
             catch(Exception ex){
@@ -236,6 +229,7 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 log.error(ex.getMessage());
             }
         }
-        return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).withShouldEndSession(false).build();
+        speechText += " Do you have other courses you would like to check?";
+        return input.getResponseBuilder().addElicitSlotDirective("startover_confirm",intentRequest.getIntent()).withSpeech(speechText).build();
     }
 }
