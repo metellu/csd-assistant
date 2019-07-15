@@ -73,6 +73,13 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                     Intent instructorIntent = Intent.builder().withName("InstructorIntent").putSlotsItem("instructor_fullname",instructor).putSlotsItem("confirm",confirmSlot).build();
                     return input.getResponseBuilder().addDelegateDirective(instructorIntent).build();
                 }
+                else{
+                    Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+                    attr.remove("origin");
+                    input.getAttributesManager().setSessionAttributes(attr);
+                    speechText = "Ok. If you want to query about other courses, please let me know the course name.";
+                    return input.getResponseBuilder().withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).withShouldEndSession(false).build();
+                }
             }
 
             Map<String, AttributeValue> exprAttr = new HashMap<String, AttributeValue>();
@@ -149,9 +156,11 @@ public class CourseDescIntentHandler implements IntentRequestHandler {
                 sessionAttr.put("course_code",codeConcat);
                 //sessionAttr.put("time_location", timeLocationMap);
                 sessionAttr.put("course_desc", course.getDescription());
-                sessionAttr.put("origin","CourseDescIntent");
-                input.getAttributesManager().setSessionAttributes(sessionAttr);
+
             }
+            sessionAttr.put("origin","CourseDescIntent");
+            input.getAttributesManager().setSessionAttributes(sessionAttr);
+
             if( !IntentHelper.isStringValid(timeConfirm) ){
                 speechText += " If you're interested in this course, I could provide more information on the course evalution and instructor. Just tell me which one you would like to know, course evalution method or instructor?";
                 return input.getResponseBuilder().addElicitSlotDirective("eval_confirm",intentRequest.getIntent()).withSpeech(speechText).build();

@@ -68,6 +68,9 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
 
         if( IntentHelper.isStringValid(startover_confirm) ){
             if( startover_confirm.equalsIgnoreCase("yes") ){
+                Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+                attr.remove("origin");
+                input.getAttributesManager().setSessionAttributes(attr);
                 Slot nameSlot = Slot.builder().withName("course_name").withValue("").build();
                 Slot codeSlot = Slot.builder().withName("course_code").withValue("").build();
                 Slot confirmSlot = Slot.builder().withName("eval_confirm").withValue("").build();
@@ -229,7 +232,12 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                 log.error(ex.getMessage());
             }
         }
-        speechText += " Do you have other courses you would like to check?";
-        return input.getResponseBuilder().addElicitSlotDirective("startover_confirm",intentRequest.getIntent()).withSpeech(speechText).build();
+        if( input.getAttributesManager().getSessionAttributes().containsKey("origin") ) {
+            speechText += " Do you have other courses you would like to check?";
+            return input.getResponseBuilder().addElicitSlotDirective("startover_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
+        }
+        else{
+            return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).build();
+        }
     }
 }

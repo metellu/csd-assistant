@@ -83,6 +83,13 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                     Intent venueIntent = Intent.builder().putSlotsItem("course_name", nameSlot).putSlotsItem("course_code", codeSlot).putSlotsItem("degree",degreeSlot).putSlotsItem("prerequisites_confirm",prereqSlot).putSlotsItem("instructor_info_confirm",instrSlot).withName("EnrollmentEligibilityIntent").putSlotsItem("startover_confirm",startoverSlot).build();
                     return input.getResponseBuilder().addDelegateDirective(venueIntent).build();
                 }
+                else{
+                    Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+                    attr.remove("origin");
+                    input.getAttributesManager().setSessionAttributes(attr);
+                    speechText = "Ok. If you would like to check other courses, please give me the course name.";
+                    return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).build();
+                }
             }
             String codeConcat = "";
             String timeConcat = "";
@@ -147,7 +154,7 @@ public class TimeTableIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addElicitSlotDirective("course_name", intentRequest.getIntent()).withSpeech("Sorry, course " + courseName + "may be not available this year. Please tell me another course, if you would like to continue.").build();
                 } else {
                     speechText = "Course CS" + codeConcat + " " + IntentHelper.capitalizeName(courseName) + " starts " + timeConcat + "in " + term + " term.";
-                    if( !IntentHelper.isStringValid(venueQuery) ) {
+                    if( !IntentHelper.isStringValid(venueQuery) && input.getAttributesManager().getSessionAttributes().containsKey("origin") ) {
                         speechText += " If you're interested in enrolling in this course, I can check your eligibility. Do you want me to continue with the eligibility check? ";
                         return input.getResponseBuilder().addElicitSlotDirective("eligibility_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                     }

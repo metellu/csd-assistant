@@ -45,7 +45,10 @@ public class EvaluationIntentHandler implements IntentRequestHandler {
                     return input.getResponseBuilder().addDelegateDirective(intent).build();
                 }
                 else{
-                    speechText = "Ok.";
+                    Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+                    attr.remove("origin");
+                    input.getAttributesManager().setSessionAttributes(attr);
+                    speechText = "Ok. If you want to query about other courses, pleaes let me know the course name.";
                 }
             }
             else {
@@ -85,26 +88,33 @@ public class EvaluationIntentHandler implements IntentRequestHandler {
                     courseName = item.get("course_name").getS();
                     courseCode = IntentHelper.formCourseCodeString(item.get("course_code").getL());
                     sessionAttr.clear();
-                    sessionAttr.put("course_name",courseName);
-                    sessionAttr.put("course_code",courseCode);
-                    sessionAttr.put("course_desc",item.get("description").getS());
-                    sessionAttr.put("degree",degree);
-                    sessionAttr.put("instructor",instructorConcat);
+                    sessionAttr.put("course_name", courseName);
+                    sessionAttr.put("course_code", courseCode);
+                    sessionAttr.put("course_desc", item.get("description").getS());
+                    sessionAttr.put("degree", degree);
+                    sessionAttr.put("instructor", instructorConcat);
+                    sessionAttr.put("origin","EvaluationIntent");
                     input.getAttributesManager().setSessionAttributes(sessionAttr);
-                    Map<String, AttributeValue> evals = item.get("evaluation").getM();
-                    if (evals.containsKey(degree)) {
-                        speechText = "Components of the course grade and their weighting are as follows:";
-                        speechText += " " + evals.get(degree).getS();
+                    if( item.containsKey("evaluation") && item.get("evaluation").getM()!=null ) {
+                        Map<String, AttributeValue> evals = item.get("evaluation").getM();
+                        if (evals.containsKey(degree)) {
+                            speechText = "Components of the course grade and their weighting are as follows:";
+                            speechText += " " + evals.get(degree).getS();
+                        }
+                        else{
+                            speechText = "Sorry, I didn't find any evaluation method list for this course";
+                        }
                     }
-
-                    speechText += ". If you're still interested in the course, I can check the course time for you. Do you want me to proceed ?";
-                    return input.getResponseBuilder().addElicitSlotDirective("time_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
+                    if (sessionAttr.containsKey("origin")) {
+                        speechText += ". If you're still interested in the course, I can check the course time for you. Do you want me to proceed ?";
+                        return input.getResponseBuilder().addElicitSlotDirective("time_confirm", intentRequest.getIntent()).withSpeech(speechText).build();
+                    }
                 }
             }
         }
         catch(Exception ex){
             speechText = ex.toString();
         }
-        return input.getResponseBuilder().withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).build();
+        return input.getResponseBuilder().withSimpleCard("CSD Assistant",speechText).withSpeech(speechText).withShouldEndSession(false).build();
     }
 }

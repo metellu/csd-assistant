@@ -36,29 +36,27 @@ public class InstructorIntentHandler implements IntentRequestHandler{
             instructor = IntentHelper.getSpecifiedSlotValueIfExists(slots,"instructor_fullname");
             confirm    = IntentHelper.getSpecifiedSlotValueIfExists(slots,"confirm");
             if( IntentHelper.isStringValid(confirm) ){
-                speechText += "pass1;";
                 confirm = slots.get("confirm").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
-                speechText +="pass2;";
                 if( confirm.equalsIgnoreCase("yes") ) {
                     if (input.getAttributesManager().getSessionAttributes().containsKey("course_name")) {
-                        speechText+="pass3;";
                         courseName = (String) input.getAttributesManager().getSessionAttributes().get("course_name");
                     }
                     else{
-                        speechText+="pass4;";
                         courseName = "";
                     }
-                    speechText+="pass5;";
                     Slot nameSlot = Slot.builder().withName("course_name").withValue(courseName).build();
                     Slot codeSlot = Slot.builder().withName("course_code").withValue("").build();
                     Slot confirmSlot = Slot.builder().withName("eligibility_confirm").withValue("").build();
                     Intent timeIntent = Intent.builder().putSlotsItem("course_name", nameSlot).putSlotsItem("course_code", codeSlot).putSlotsItem("eligibility_confirm", confirmSlot).withName("TimeTableIntent").build();
-                    speechText+="pass6;";
+
                     return input.getResponseBuilder().addDelegateDirective(timeIntent).build();
                 }
                 else{
+                    Map<String,Object> attr = input.getAttributesManager().getSessionAttributes();
+                    attr.remove("origin");
+                    input.getAttributesManager().setSessionAttributes(attr);
                     speechText = "Ok. If you want to query about other courses, please let me know the course name.";
-                    return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).build();
+                    return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).withShouldEndSession(false).build();
                 }
             }
             else {
@@ -148,8 +146,6 @@ public class InstructorIntentHandler implements IntentRequestHandler{
                     if (input.getAttributesManager().getSessionAttributes().containsKey("origin")) {
                         speechText += ". Now if you're still intersted in the course, I can show you the course time. Do you want me to proceed with the course time lookup?";
                         Map<String, Object> attr = input.getAttributesManager().getSessionAttributes();
-                        attr.remove("origin");
-                        input.getAttributesManager().setSessionAttributes(attr);
                         return input.getResponseBuilder().addElicitSlotDirective("confirm", intentRequest.getIntent()).withSpeech(speechText).build();
                     }
                 }
