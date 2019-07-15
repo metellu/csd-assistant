@@ -34,12 +34,19 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
         List<String> prerequisite = new ArrayList<>();
 
         Map<String,Slot> slots = intentRequest.getIntent().getSlots();
-        courseName = IntentHelper.getCourseNameIfExists(slots);
+        courseName = IntentHelper.getSpecifiedSlotValueIfExists(slots,"course_name");
+        if( IntentHelper.isStringValid(courseName) ){
+            courseName = slots.get("course_name").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
+        }
         courseCode = IntentHelper.getCourseCodeIfExists(slots);
         degree     = IntentHelper.getSpecifiedSlotValueIfExists(slots,"degree");
 
-        if( !IntentHelper.isStringValid(degree) ){
-            return input.getResponseBuilder().addElicitSlotDirective("degree",intentRequest.getIntent()).withSpeech("In order to proceed, I would like to know if you are a graduate student or undergraduate student.").build();
+        if( !IntentHelper.isStringValid(degree) ) {
+            if (input.getAttributesManager().getSessionAttributes().containsKey("degree")) {
+                degree = (String) input.getAttributesManager().getSessionAttributes().get("degree");
+            } else {
+                return input.getResponseBuilder().addElicitSlotDirective("degree", intentRequest.getIntent()).withSpeech("In order to proceed, I would like to know if you are a graduate student or undergraduate student.").build();
+            }
         }
         else{
             degree = slots.get("degree").getResolutions().getResolutionsPerAuthority().get(0).getValues().get(0).getValue().getName();
@@ -68,8 +75,9 @@ public class EnrollmentEligibilityIntentHandler implements IntentRequestHandler 
                     exprAttr.put(":name",new AttributeValue().withS(instr));
                     List<Map<String,AttributeValue>> items = IntentHelper.DBQueryByInstructorName(exprAttr,"fullname,email");
                     if( items.size()==1 ){
-                        speechText += "Professor "+IntentHelper.capitalizeName(items.get(0).get("fullname").getS())+" at "+items.get(0).get("email").getS()+" ";
+                        speechText += "Professor "+IntentHelper.capitalizeName(items.get(0).get("fullname").getS())+" at "+items.get(0).get("email").getS()+" and ";
                     }
+                    speechText = speechText.substring(0,speechText.lastIndexOf("and"));
                 }
             }
             return input.getResponseBuilder().withSpeech(speechText).withSimpleCard("CSD Assistant",speechText).withShouldEndSession(false).build();
